@@ -111,7 +111,7 @@ def main():
             update_rule=FLAGS.update_rule,
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
             pretrained_model=None, model_path='model/AttConvLSTM/', 
-            test_model='model/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
+            test_model='model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
     else:
         print('build ConvLSTM model...')
         model = ConvLSTM(input_dim=input_dim, batch_size=FLAGS.batch_size, 
@@ -133,7 +133,7 @@ def main():
             update_rule=FLAGS.update_rule,
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
             pretrained_model=None, model_path='model/ConvLSTM/', 
-            test_model='model/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
+            test_model='model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
     
 
     print('begin training...')
