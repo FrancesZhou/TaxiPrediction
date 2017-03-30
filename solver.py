@@ -71,10 +71,10 @@ class ModelSolver(object):
 				print "Start training with pretrained model..."
 				saver.restore(sess, self.pretrained_model)
 
-			curr_loss = 0
+			#curr_loss = 0
 			start_t = time.time()
 			for e in range(self.n_epochs):
-				
+				curr_loss = 0
 				for i in range(len(x)):
 					feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
 					_, l = sess.run([train_op, loss], feed_dict)

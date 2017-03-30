@@ -56,7 +56,7 @@ def main():
     # load train dataset
     pre_process = MinMaxNormalization01()
     print('load train, validate, test data...')
-    train_data, val_data, _ = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=[43824, 8760, 8760])
+    train_data, val_data, test_data = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=[43824, 8760, 8760])
     print('preprocess train data...')
     train_data = pre_process.fit_transform(train_data)
     # data: [num, row, col, channel]
@@ -110,7 +110,7 @@ def main():
             batch_size=FLAGS.batch_size, 
             update_rule=FLAGS.update_rule,
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-            pretrained_model=None, model_path='model/AttConvLSTM/', 
+            pretrained_model=None, model_path='model_save/AttConvLSTM/', 
             test_model='model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
     else:
         print('build ConvLSTM model...')
@@ -132,13 +132,19 @@ def main():
             batch_size=FLAGS.batch_size, 
             update_rule=FLAGS.update_rule,
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-            pretrained_model=None, model_path='model/ConvLSTM/', 
+            pretrained_model=None, model_path='model_save/ConvLSTM/', 
             test_model='model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/')
     
 
     print('begin training...')
     solver.train()
-    solver.test()
+    # preprocess test data and get batch test data
+    print('test trained model...')
+    test_data = pre_process.transform(test_data)
+    test_x, test_y = batch_data(data=test_data, batch_size=FLAGS.batch_size,
+        input_steps=FLAGS.input_steps, output_steps=FLAGS.output_steps)
+    test = {'x': test_x, 'y': test_y}
+    solver.test(test)
 
 if __name__ == "__main__":
     main()
