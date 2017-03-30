@@ -113,6 +113,7 @@ class ModelSolver(object):
 		# build graphs
 		y_ = self.model.build_sampler()
 
+		y = np.asarray(y)
 		y_pred_all = np.ndarray(y.shape)
 		
 		y_real = tf.convert_to_tensor(y)
