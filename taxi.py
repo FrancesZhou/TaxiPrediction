@@ -40,6 +40,8 @@ tf.app.flags.DEFINE_boolean('use_att', True,
                             """whether to use attention mechanism""")
 tf.app.flags.DEFINE_integer('cluster_num', 128,
                             """num of cluster in attention mechanism""")
+tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
+                            """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 # tf.app.flags.DEFINE_float('weight_init', .1,
@@ -81,7 +83,7 @@ def main():
         vector_data = np.reshape(train_data, (train_data.shape[0], -1))
         #init_vectors = vector_data[:FLAGS.cluster_num, :]
 	#cluster_centroid = init_vectors
-        kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=5, tol=0.00000001).fit(vector_data)
+        kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
         cluster_centroid = kmeans.cluster_centers_
         # reshape to [cluster_num, row, col, channel]
         cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
