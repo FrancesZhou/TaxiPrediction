@@ -112,7 +112,11 @@ class ModelSolver(object):
 
 		# build graphs
 		y_ = self.model.build_sampler()
-		loss = 2*tf.nn.l2_loss(y-y_)
+
+		y_pred_all = np.ndarray(y.shape)
+		
+		y_real = tf.convert_to_tensor(y)
+		loss = 2*tf.nn.l2_loss(y_real-y_)
 		#summary_op = tf.summary.merge_all()
 
 		with tf.Session() as sess:
@@ -121,7 +125,7 @@ class ModelSolver(object):
 			saver = tf.train.Saver()
 			saver.restore(sess, self.test_model)
 			start_t = time.time()
-			y_pred_all = np.ndarray(y.shape)
+			#y_pred_all = np.ndarray(y.shape)
 			t_loss = 0
 			for i in range(len(y)):
 				feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
