@@ -129,10 +129,11 @@ class ConvLSTM(object):
 
 	def build_sampler(self):
 		x = self.x
+		y = self.y
 		#batch_size = tf.shape(x)[0]
 		state = self.encoder_state
 		for t in range(self.input_steps):
-			y, state = self.encoder(x[:, t, :, :, :], state)
+			_, state = self.encoder(x[:, t, :, :, :], state)
 		state_2 = state
 		y_ = []
 		for t in range(self.output_steps):
@@ -140,6 +141,7 @@ class ConvLSTM(object):
 			y_.append(out)
 		y_ = tf.stack(y_)
 		y_ = tf.transpose(y_, [1,0,2,3,4])
-		return y_
+		loss = 2*tf.nn.l2_loss(y-y_[:,:,:,:,:])
+		return y_, loss
 
 

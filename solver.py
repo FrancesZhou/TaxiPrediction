@@ -40,7 +40,7 @@ class ModelSolver(object):
 		y_val = np.asarray(self.val_data['y'])
 
 		# build graphs
-		loss = self.model.build_model()
+		y_, loss = self.model.build_model()
 
 		#tf.get_variable_scope().reuse_variables()
 		#y_ = self.model.build_sampler()
@@ -53,7 +53,7 @@ class ModelSolver(object):
 			train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)
 
 		tf.get_variable_scope().reuse_variables()
-		y_ = self.model.build_sampler()
+		#y_ = self.model.build_sampler()
 		# summary op
 		tf.summary.scalar('batch_loss', loss)
 		for var in tf.trainable_variables():
@@ -111,13 +111,13 @@ class ModelSolver(object):
 		y = data['y']
 
 		# build graphs
-		y_ = self.model.build_sampler()
+		y_, loss = self.model.build_model()
 
 		y = np.asarray(y)
 		y_pred_all = np.ndarray(y.shape)
 		
-		y_real = tf.convert_to_tensor(y)
-		loss = 2*tf.nn.l2_loss(y_real-y_)
+		#y_real = tf.convert_to_tensor(y)
+		#loss = 2*tf.nn.l2_loss(y_real-y_)
 		#summary_op = tf.summary.merge_all()
 
 		with tf.Session() as sess:
@@ -131,7 +131,7 @@ class ModelSolver(object):
 			for i in range(len(y)):
 				feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-				y_pred_all[i] = y_p
+				y_pred_all[i] = y_p.eval()
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
