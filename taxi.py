@@ -81,10 +81,10 @@ def main():
         # train_data: [num, row, col, channel]
         print('k-means to cluster...')
         vector_data = np.reshape(train_data, (train_data.shape[0], -1))
-        #init_vectors = vector_data[:FLAGS.cluster_num, :]
-	#cluster_centroid = init_vectors
-        kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
-        cluster_centroid = kmeans.cluster_centers_
+        init_vectors = vector_data[:FLAGS.cluster_num, :]
+	cluster_centroid = init_vectors
+        #kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
+        #cluster_centroid = kmeans.cluster_centers_
         # reshape to [cluster_num, row, col, channel]
         cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
         # build model
@@ -139,7 +139,7 @@ def main():
     
 
     print('begin training...')
-    solver.train()
+    #solver.train()
     # preprocess test data and get batch test data
     print('test trained model...')
     test_data = pre_process.transform(test_data)

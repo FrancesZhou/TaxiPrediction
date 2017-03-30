@@ -107,13 +107,13 @@ class ModelSolver(object):
 					print "model-%s saved." % (e+1)
 
 	def test(self, data, save_outputs=True):
-		x = data['x']
-		y = data['y']
+		x = np.asarray(data['x'])
+		y = np.asarray(data['y'])
 
 		# build graphs
 		y_, loss = self.model.build_model()
 
-		y = np.asarray(y)
+		#y = np.asarray(y)
 		y_pred_all = np.ndarray(y.shape)
 		
 		#y_real = tf.convert_to_tensor(y)
@@ -131,12 +131,12 @@ class ModelSolver(object):
 			for i in range(len(y)):
 				feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-				y_pred_all[i] = y_p.eval()
+				y_pred_all[i] = y_p
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
 			rmse = np.sqrt(t_loss/(np.prod(y.shape)))
-			print("test loss is" + str(self.preprocessing.real_loss(rmse)))
+			print("test loss is " + str(self.preprocessing.real_loss(rmse)))
 			print("elapsed time: ", time.time() - start_t)
 			if save_outputs:
 				np.save('test_outputs.npy',y_pred_all)
