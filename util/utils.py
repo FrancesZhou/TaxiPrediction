@@ -1,6 +1,7 @@
 import numpy as np
 import cPickle as pickle
 import scipy.io as sio
+import h5py
 import time
 import os
 
@@ -16,12 +17,12 @@ def load_data(filename, split):
 	return train, validate, test
 
 def load_h5data(fname):
-    f = h5py.File(fname, 'r')
-    data = f['data'].value
-    data = np.transpose(np.asarray(data), (0,2,3,1))
-    timestamps = f['date'].value
-    f.close()
-    return data, timestamps
+	f = h5py.File(fname, 'r')
+	data = f['data'].value
+	data = np.transpose(np.asarray(data), (0,2,3,1))
+	timestamps = f['date'].value
+	f.close()
+	return data, timestamps
 
 def batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 	# data: [num, row, col, channel]
@@ -64,22 +65,22 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 	i = max(c*close, p*period, t*trend)
 
 	# external feature
-	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps[i:]]
-    ext = []
-    for i in vec:
-        v = [0 for _ in range(7)]
-        v[i] = 1
-        if i >= 5: 
-            v.append(0)  # weekend
-        else:
-            v.append(1)  # weekday
-        ext.append(v)
-    ext = np.asarray(ext)
-    # ext plus c p t
-    # x: [batches, batch_size, 4]
-    # y: [batches, batch_size, 1]
-    x = []
-    y = []
+	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
+	ext = []
+	for i in vec:
+        	v = [0 for _ in range(7)]
+        	v[i] = 1
+        	if i >= 5: 
+			v.append(0)  # weekend
+        	else:
+			v.append(1)  # weekday
+        	ext.append(v)
+	ext = np.asarray(ext)
+	# ext plus c p t
+	# x: [batches, batch_size, 4]
+	# y: [batches, batch_size, 1]
+	x = []
+	y = []
 	while i<num:
 		x_b = []
 		y_b = []
@@ -88,7 +89,7 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 			if i+b >= num:
 				break
 			for d in range(len(depends)):
-				x_.append(data[i+b-depends[d], :, :, :])
+				x_.append(data[i+b-np.array(depends[d]), :, :, :])
 			x_.append(ext[i])
 			y_b.append(data[i+b, :, :, :]) 
 			x_b.append(x_)

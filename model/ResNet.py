@@ -21,7 +21,7 @@ class ResNet(object):
 			conf = self.input_conf[i]
 			self.inputs.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
 		# for external input
-		self.inputs.append(tf.placeholder(tf.float32, [None, self.input_conf[-1]]))
+		self.inputs.append(tf.placeholder(tf.float32, [None, self.input_conf[-1][0]]))
 		sefl.output = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 
 		self.weight_initializer = tf.contrib.layers.xavier_initializer()

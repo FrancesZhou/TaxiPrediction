@@ -11,6 +11,7 @@ sys.path.append('./data/')
 from ConvLSTM import *
 #from model.AttConvLSTM import AttConvLSTM
 from AttConvLSTM import *
+from ResNet import *
 from preprocessing import *
 from utils import *
 
@@ -61,21 +62,21 @@ def main():
     # load train dataset
     pre_process = MinMaxNormalization01()
     print('load data...')
-    data, timestamps = load_h5data('data/NYC14_M16x8_T60_NewEnd.h5')
+    data, timestamps = load_h5data('./data/NYC14_M16x8_T60_NewEnd.h5')
     print('preprocess data...')
     # data: [num, row, col, channel]
     data = pre_process.fit_transform(data)
     print('get batch data...')
     x, y = batch_data_cpt_ext(data, timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
     train_x = x[:-FLAGS.test_num]
-    test_x = x[-FLAGLS.test_num:]
+    test_x = x[-FLAGS.test_num:]
     train_y = y[:-FLAGS.test_num]
     test_y = y[-FLAGS.test_num]
     
     train = {'x': train_x, 'y': train_y}
     test = {'x': test_x, 'y': test_y}
 
-    input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
+    #input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
     nb_flow = data.shape[-1]
     row = data.shape[1]
     col = data.shape[2]
