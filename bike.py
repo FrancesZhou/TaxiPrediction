@@ -64,7 +64,7 @@ def main():
     print('load data...')
     data, timestamps = load_h5data('./data/NYC14_M16x8_T60_NewEnd.h5')
     print('preprocess data...')
-    # data: [num, row, col, channel]
+    # data: [num, channel, row, col]
     data = pre_process.fit_transform(data)
     pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
 
@@ -84,9 +84,9 @@ def main():
     test = {'x': test_x, 'y': test_y}
 
     #input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
-    nb_flow = data.shape[-1]
-    row = data.shape[1]
-    col = data.shape[2]
+    nb_flow = data.shape[1]
+    row = data.shape[2]
+    col = data.shape[3]
     print('build ResNet model...')
     # model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
     #     [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 

@@ -111,7 +111,7 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 		# external features
 		x_b.append(ext[i])
 		# y
-		y_b.append(data[i:min(i+batch_size,num), :, :, :]) 
+		y_b.append(np.transpose(data[i:min(i+batch_size,num), :, :, :],[0,2,3,1])) 
 		x.append(x_b)
 		y.append(y_b)
 		i += batch_size
