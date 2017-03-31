@@ -61,7 +61,7 @@ class ResNet(object):
 
 	def res_net(self, x, unit_num, res_param, idx):
 		y_ = x
-		unit_num = unit_num[0]
+		#unit_num = unit_num[0]
 		with tf.variable_scope('res_net_{0}'.format(idx)) as scope:
 			for i in range(unit_num):
 				y_ = self.res_unit(y_, res_param=res_param, idx=i)
