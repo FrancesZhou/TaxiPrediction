@@ -3,14 +3,12 @@ import tensorflow as tf
 import sys
 from sklearn.cluster import KMeans
 from solver import ModelSolver
+sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
+sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+# sys.path.append('/home/zx/TaxiPrediction/model/')
+# sys.path.append('./util/')
+# sys.path.append('./data/')
 
-sys.path.append('/home/zx/TaxiPrediction/model/')
-sys.path.append('./util/')
-sys.path.append('./data/')
-#from model.ConvLSTM import ConvLSTM
-from ConvLSTM import *
-#from model.AttConvLSTM import AttConvLSTM
-from AttConvLSTM import *
 from ResNet import *
 from preprocessing import *
 from utils import *
@@ -66,12 +64,19 @@ def main():
     print('preprocess data...')
     # data: [num, row, col, channel]
     data = pre_process.fit_transform(data)
+    pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
+
+    train_data = data[:-FLAGS.test_num]
+    train_timestamps = timestamps[:-FLAGS.test_num]
+    test_data = data[pre_index-FLAGS.test_num:]
+    test_timestamps = timestamps[pre_index-FLAGS.test_num]
     print('get batch data...')
-    x, y = batch_data_cpt_ext(data, timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
-    train_x = x[:-FLAGS.test_num]
-    test_x = x[-FLAGS.test_num:]
-    train_y = y[:-FLAGS.test_num]
-    test_y = y[-FLAGS.test_num]
+    train_x, train_y = batch_data_cpt_ext(train_data, train_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+    test_x, test_y = batch_data_cpt_ext(test_data, test_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+    # train_x = x[:-FLAGS.test_num]
+    # test_x = x[-FLAGS.test_num:]
+    # train_y = y[:-FLAGS.test_num]
+    # test_y = y[-FLAGS.test_num:]
     
     train = {'x': train_x, 'y': train_y}
     test = {'x': test_x, 'y': test_y}
@@ -89,7 +94,6 @@ def main():
     #     'res_param':[ {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':64}, 
     #                   {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':64} ] },
     #     {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':2} ])
-
     model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
         [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
         layer=['conv', 'res_net', 'conv'],

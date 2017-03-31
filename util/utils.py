@@ -42,6 +42,23 @@ def batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 		y.append(batch_y)
 		i += batch_size
 	return x, y
+# x: [batches, batch_size, 4]
+# y: [batches, batch_size, 1]
+# while i<num:
+# 	x_b = []
+# 	y_b = []
+# 	for b in range(batch_size):
+# 		x_ = []
+# 		if i+b >= num:
+# 			break
+# 		for d in range(len(depends)):
+# 			x_.append(data[i+b-np.array(depends[d]), :, :, :])
+# 		x_.append(ext[i])
+# 		y_b.append(data[i+b, :, :, :]) 
+# 		x_b.append(x_)
+# 	x.append(x_b)
+# 	y.append(y_b)
+# 	i += batch_size
 
 def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend=4):
 	# data: [num, row, col, channel]
@@ -63,7 +80,6 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 				[t*j for j in range(1, trend+1)] ]
 	depends = np.asarray(depends)
 	i = max(c*close, p*period, t*trend)
-
 	# external feature
 	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
 	ext = []
@@ -77,27 +93,10 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
         	ext.append(v)
 	ext = np.asarray(ext)
 	# ext plus c p t
-	# x: [batches, batch_size, 4]
-	# y: [batches, batch_size, 1]
-	x = []
-	y = []
-	while i<num:
-		x_b = []
-		y_b = []
-		for b in range(batch_size):
-			x_ = []
-			if i+b >= num:
-				break
-			for d in range(len(depends)):
-				x_.append(data[i+b-np.array(depends[d]), :, :, :])
-			x_.append(ext[i])
-			y_b.append(data[i+b, :, :, :]) 
-			x_b.append(x_)
-		x.append(x_b)
-		y.append(y_b)
-		i += batch_size
 	# x: [batches, 4, batch_size]
 	# y: [batches, batch_size]
+	x = []
+	y = []
 	while i<num:
 		x_b = []
 		y_b = []
