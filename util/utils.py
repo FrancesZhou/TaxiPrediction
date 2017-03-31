@@ -15,6 +15,14 @@ def load_data(filename, split):
 	
 	return train, validate, test
 
+def load_h5data(fname):
+    f = h5py.File(fname, 'r')
+    data = f['data'].value
+    data = np.transpose(np.asarray(data), (0,2,3,1))
+    timestamps = f['date'].value
+    f.close()
+    return data, timestamps
+
 def batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 	# data: [num, row, col, channel]
 	num = data.shape[0]
@@ -31,6 +39,61 @@ def batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 			batch_y.append(data[i+s+input_steps:i+s+input_steps+output_steps, :, :, :])
 		x.append(batch_x)
 		y.append(batch_y)
+		i += batch_size
+	return x, y
+
+def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend=4):
+	# data: [num, row, col, channel]
+	num = data.shape[0]
+	flow = data.shape[-1]
+	# x: [batches, 
+	#[
+	#[batch_size, row, col, close*flow], 
+	#[batch_size, row, col, period*flow], 
+	#[batch_size, row, col, trend*flow],
+	#[batch_size, external_dim]
+	#]
+	#]
+	c = 1
+	p = 24
+	t = 24*7
+	depends = [ [c*j for j in range(1, close+1)],
+				[p*j for j in range(1, period+1)],
+				[t*j for j in range(1, trend+1)] ]
+	depends = np.asarray(depends)
+	i = max(c*close, p*period, t*trend)
+
+	# external feature
+	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps[i:]]
+    ext = []
+    for i in vec:
+        v = [0 for _ in range(7)]
+        v[i] = 1
+        if i >= 5: 
+            v.append(0)  # weekend
+        else:
+            v.append(1)  # weekday
+        ext.append(v)
+    ext = np.asarray(ext)
+    # ext plus c p t
+    # x: [batches, batch_size, 4]
+    # y: [batches, batch_size, 1]
+    x = []
+    y = []
+	while i<num:
+		x_b = []
+		y_b = []
+		for b in range(batch_size):
+			x_ = []
+			if i+b >= num:
+				break
+			for d in range(len(depends)):
+				x_.append(data[i+b-depends[d], :, :, :])
+			x_.append(ext[i])
+			y_b.append(data[i+b, :, :, :]) 
+			x_b.append(x_)
+		x.append(x_b)
+		y.append(y_b)
 		i += batch_size
 	return x, y
 

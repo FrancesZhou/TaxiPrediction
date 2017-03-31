@@ -2,6 +2,7 @@
 import numpy as np
 import time
 import os
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 class ModelSolver(object):
@@ -10,6 +11,7 @@ class ModelSolver(object):
 		self.data = data
 		self.val_data = val_data
 		self.preprocessing = preprocessing
+		self.cross_val = kwargs.pop('cross_val', False)
 		self.n_epochs = kwargs.pop('n_epochs', 10)
 		self.batch_size = kwargs.pop('batch_size', 32)
 		self.learning_rate = kwargs.pop('learning_rate', 0.000001)
@@ -75,8 +77,11 @@ class ModelSolver(object):
 			start_t = time.time()
 			for e in range(self.n_epochs):
 				curr_loss = 0
+				# cross validation
+				if self.cross_val:
+					x, y, x_val, y_val = train_test_split(x, y, test_size=0.1, random_state=50)
 				for i in range(len(x)):
-					feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
+					feed_dict = {self.model.x: x[i], self.model.y: y[i]}
 					_, l = sess.run([train_op, loss], feed_dict)
 					curr_loss += l
 
@@ -91,7 +96,7 @@ class ModelSolver(object):
 				val_loss = 0
 				y_pred_all = np.ndarray(y_val.shape)
 				for i in range(len(y_val)):
-					feed_dict = {self.model.x: x_val[i,:,:,:,:], self.model.y: y_val[i,:,:,:,:]}
+					feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
 					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 					y_pred_all[i] = y_p
 					val_loss += l
@@ -129,7 +134,7 @@ class ModelSolver(object):
 			#y_pred_all = np.ndarray(y.shape)
 			t_loss = 0
 			for i in range(len(y)):
-				feed_dict = {self.model.x: x[i,:,:,:,:], self.model.y: y[i,:,:,:,:]}
+				feed_dict = {self.model.x: x[i], self.model.y: y[i]}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 				y_pred_all[i] = y_p
 				t_loss += l
