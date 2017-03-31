@@ -22,8 +22,8 @@ class ResNet(object):
 			self.inputs.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
 		# for external input
 		self.inputs.append(tf.placeholder(tf.float32, [None, 8]))
-		conf = self.input_conf[0]
-		sefl.output = tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[1]])
+		#conf = self.input_conf[0]
+		self.output = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 
 		self.weight_initializer = tf.contrib.layers.xavier_initializer()
 		self.const_initializer = tf.constant_initializer()
@@ -61,6 +61,7 @@ class ResNet(object):
 
 	def res_net(self, x, unit_num, res_param, idx):
 		y_ = x
+		unit_num = unit_num[0]
 		with tf.variable_scope('res_net_{0}'.format(idx)) as scope:
 			for i in range(unit_num):
 				y_ = self.res_unit(y_, res_param=res_param, idx=i)
@@ -80,7 +81,7 @@ class ResNet(object):
 		y = self.output
 		#input_conf = self.input_conf
 		layer = self.layer
-		layer_param = self.layer_param
+		param = self.layer_param
 		y_all = []
 		for i in range(len(x)-1):
 			# i: inputs num
