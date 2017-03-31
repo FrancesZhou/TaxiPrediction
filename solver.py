@@ -81,7 +81,12 @@ class ModelSolver(object):
 				if self.cross_val:
 					x, y, x_val, y_val = train_test_split(x, y, test_size=0.1, random_state=50)
 				for i in range(len(x)):
-					feed_dict = {self.model.x: x[i], self.model.y: y[i]}
+					if self.cross_val:
+						feed_dict = {self.model.x_c: x[i][0], self.model.x_p: x[i][1], self.model.x_t: x[i][2], 
+									self.model.x_ext:x[i][3], 
+									self.model.y: y[i]}
+					else:
+						feed_dict = {self.model.x: x[i], self.model.y: y[i]}
 					_, l = sess.run([train_op, loss], feed_dict)
 					curr_loss += l
 
@@ -96,7 +101,12 @@ class ModelSolver(object):
 				val_loss = 0
 				y_pred_all = np.ndarray(y_val.shape)
 				for i in range(len(y_val)):
-					feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
+					if self.cross_val:
+						feed_dict = {self.model.x_c: x_val[i][0], self.model.x_p: x_val[i][1], self.model.x_t: x_val[i][2], 
+									self.model.x_ext:x_val[i][3], 
+									self.model.y: y_val[i]}
+					else:
+						feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
 					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 					y_pred_all[i] = y_p
 					val_loss += l
@@ -134,7 +144,12 @@ class ModelSolver(object):
 			#y_pred_all = np.ndarray(y.shape)
 			t_loss = 0
 			for i in range(len(y)):
-				feed_dict = {self.model.x: x[i], self.model.y: y[i]}
+				if self.cross_val:
+					feed_dict = {self.model.x_c: x[i][0], self.model.x_p: x[i][1], self.model.x_t: x[i][2], 
+									self.model.x_ext:x[i][3], 
+									self.model.y: y[i]}
+				else:
+					feed_dict = {self.model.x: x[i], self.model.y: y[i]}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 				y_pred_all[i] = y_p
 				t_loss += l

@@ -103,7 +103,8 @@ def main():
             update_rule=FLAGS.update_rule,
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
             pretrained_model=None, model_path='model_save/ResNet/', 
-            test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/')
+            test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/', 
+            cross_val=True)
 
     print('begin training...')
     solver.train()

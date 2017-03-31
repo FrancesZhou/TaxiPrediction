@@ -16,12 +16,11 @@ class ResNet(object):
 		self.batch_size = batch_size
 		self.layer = layer
 		self.layer_param = layer_param
-		self.x = []
-		for i in range(len(input_conf)-1):
-			conf = self.input_conf[i]
-			self.x.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
+		self.x_c = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[0][0]*self.nb_flow])
+		self.x_p = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[1][0]*self.nb_flow])
+		self.x_t = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[2][0]*self.nb_flow])
 		# for external input
-		self.x.append(tf.placeholder(tf.float32, [None, 8]))
+		self.x_ext = tf.placeholder(tf.float32, [None, self.input_conf[-1]])
 		#conf = self.input_conf[0]
 		self.y = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 
@@ -77,7 +76,7 @@ class ResNet(object):
 			return tf.multiply(w_extend, x)
 
 	def build_model(self):
-		x = self.x
+		x = [self.x_c, self.x_p, self.x_t, self.x_ext]
 		y = self.y
 		#input_conf = self.input_conf
 		layer = self.layer
