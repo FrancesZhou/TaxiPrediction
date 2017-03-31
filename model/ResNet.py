@@ -4,7 +4,7 @@ import tensorflow as tf
 import BasicConvLSTMCell
 
 class ResNet(object):
-	def __init__(self, input_conf=[[3,2,16,8],[4,2,16,8],[4,2,16,8],8], batch_size=32, layer={}, layer_param={}):
+	def __init__(self, input_conf=[[3,2,16,8],[4,2,16,8],[4,2,16,8],[8]], batch_size=32, layer={}, layer_param={}):
 		# layer = ['conv', 'res_net', 'conv']
 		# layer_param = [ [[3,3], [1,1,1,1], 64],
 		# [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
@@ -20,7 +20,7 @@ class ResNet(object):
 		self.x_p = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[1][0]*self.nb_flow])
 		self.x_t = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[2][0]*self.nb_flow])
 		# for external input
-		self.x_ext = tf.placeholder(tf.float32, [None, 8])
+		self.x_ext = tf.placeholder(tf.float32, [None, self.input_conf[-1][0]])
 		#conf = self.input_conf[0]
 		self.y = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 

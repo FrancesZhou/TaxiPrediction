@@ -96,6 +96,25 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 		x.append(x_b)
 		y.append(y_b)
 		i += batch_size
+	# x: [batches, 4, batch_size]
+	# y: [batches, batch_size]
+	while i<num:
+		x_b = []
+		y_b = []
+		for d in range(len(depends)):
+			x_ = []
+			for b in range(batch_size):
+				if i+b >= num:
+					break
+				x_.append(data[i+b-np.array(depends[d]), :, :, :])
+			x_b.append(x_)
+		# external features
+		x_b.append(ext[i])
+		# y
+		y_b.append(data[i:min(i+batch_size,num), :, :, :]) 
+		x.append(x_b)
+		y.append(y_b)
+		i += batch_size
 	return x, y
 
 def shuffle_batch_data(data, batch_size=32, input_steps=10, output_steps=10):
