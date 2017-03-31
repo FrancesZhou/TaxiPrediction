@@ -82,7 +82,7 @@ def main():
     col = data.shape[2]
     print('build ResNet model...')
     model = ResNet(input_conf=[[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
-        [FLAGS.trend,nb_flow,row,col],8]], batch_size=FLAGS.batch_size, 
+        [FLAGS.trend,nb_flow,row,col],[8]]], batch_size=FLAGS.batch_size, 
         layer=['conv', 'res_net', 'conv'],
         layer_param = [ [[3,3], [1,1,1,1], 64],
         [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],

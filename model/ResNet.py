@@ -10,9 +10,9 @@ class ResNet(object):
 		# [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
 		# [[3,3], [1,1,1,1], 2] ]
 		self.input_conf = input_conf
-		self.nb_flow = input_conf[0][1]
-		self.row = input_conf[0][2]
-		self.col = input_conf[0][3]
+		self.nb_flow = self.input_conf[0][1]
+		self.row = self.input_conf[0][2]
+		self.col = self.input_conf[0][3]
 		self.batch_size = batch_size
 		self.layer = layer
 		self.layer_param = layer_param
@@ -21,8 +21,9 @@ class ResNet(object):
 			conf = self.input_conf[i]
 			self.inputs.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
 		# for external input
-		self.inputs.append(tf.placeholder(tf.float32, [None, self.input_conf[-1][0]]))
-		sefl.output = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
+		self.inputs.append(tf.placeholder(tf.float32, [None, 8]))
+		conf = self.input_conf[0]
+		sefl.output = tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[1]])
 
 		self.weight_initializer = tf.contrib.layers.xavier_initializer()
 		self.const_initializer = tf.constant_initializer()
