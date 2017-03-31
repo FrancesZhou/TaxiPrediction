@@ -56,7 +56,7 @@ class ResNet(object):
 			for i in range(len(res_param)):
 				# TODO:
 				# batch normalization
-				res = self.conv(res, res_param[i][0], res_param[i][1], res_param[i][2], padding='SAME', idx=i)
+				res = self.conv(res, res_param[i]['filter'], res_param[i]['strides'], res_param[i]['output_features'], padding='SAME', idx=i)
 		return x+res
 
 	def res_net(self, x, unit_num, res_param, idx):
@@ -90,9 +90,9 @@ class ResNet(object):
 				for l_i in range(len(layer)):
 					# l_i: layers num of input i
 					if layer[l_i]=='conv':
-						y_ = self.conv(y_, param[i][0], param[i][1], param[i][2], padding='SAME', idx=l_i)
+						y_ = self.conv(y_, param[i]['filter'], param[i]['strides'], param[i]['output_features'], padding='SAME', idx=l_i)
 					if layer[l_i]=='res_net':
-						y_ = self.res_net(y_, param[i][0], param[i][1], idx=l_i)
+						y_ = self.res_net(y_, param[i]['unit_num'], param[i]['res_param'], idx=l_i)
 			# fusion
 			# y_: [batch_size, row, col, channel]
 			y_ = self.fusion(y_, idx=i)
