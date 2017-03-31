@@ -35,11 +35,11 @@ class ModelSolver(object):
 			os.makedirs(self.log_path)
 
 	def train(self):
-		x = np.asarray(self.data['x'])
+		# x = np.asarray(self.data['x'])
+		# y = np.asarray(self.data['y'])
+		# x_val = np.asarray(self.val_data['x'])
+		# y_val = np.asarray(self.val_data['y'])
 		#print('shape of x: '+x.shape())
-		y = np.asarray(self.data['y'])
-		x_val = np.asarray(self.val_data['x'])
-		y_val = np.asarray(self.val_data['y'])
 
 		# build graphs
 		y_, loss = self.model.build_model()
@@ -82,11 +82,11 @@ class ModelSolver(object):
 					x, y, x_val, y_val = train_test_split(x, y, test_size=0.1, random_state=50)
 				for i in range(len(x)):
 					if self.cross_val:
-						feed_dict = {self.model.x_c: x[i][0], self.model.x_p: x[i][1], self.model.x_t: x[i][2], 
-									self.model.x_ext:x[i][3], 
-									self.model.y: y[i]}
+						feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
+									self.model.x_ext: np.array(x[i][3]), 
+									self.model.y: np.array(y[i])}
 					else:
-						feed_dict = {self.model.x: x[i], self.model.y: y[i]}
+						feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
 					_, l = sess.run([train_op, loss], feed_dict)
 					curr_loss += l
 
@@ -94,17 +94,17 @@ class ModelSolver(object):
 					if i%100 == 0:
 						print("at epoch "+str(e)+', '+str(i))
 						summary = sess.run(summary_op, feed_dict)
-						summary_writer.add_summary(summary, e*x.shape[0] + i)
-				t_rmse = np.sqrt(curr_loss/(np.prod(y.shape)))
+						summary_writer.add_summary(summary, e*len(x) + i)
+				t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
 				print("at epoch " + str(e) + ", train loss is " + str(curr_loss)+','+str(t_rmse)+','+ str(self.preprocessing.real_loss(t_rmse)))
 				# validate
 				val_loss = 0
-				y_pred_all = np.ndarray(y_val.shape)
+				y_pred_all = np.ndarray(np.array(y_val).shape)
 				for i in range(len(y_val)):
 					if self.cross_val:
-						feed_dict = {self.model.x_c: x_val[i][0], self.model.x_p: x_val[i][1], self.model.x_t: x_val[i][2], 
-									self.model.x_ext:x_val[i][3], 
-									self.model.y: y_val[i]}
+						feed_dict = {self.model.x_c: np.array(x_val[i][0]), self.model.x_p: np.array(x_val[i][1]), self.model.x_t: np.array(x_val[i][2]), 
+									self.model.x_ext: np.array(x_val[i][3]), 
+									self.model.y: np.array(y_val[i])}
 					else:
 						feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
 					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
@@ -112,7 +112,7 @@ class ModelSolver(object):
 					val_loss += l
 
 				# y_val : [batches, batch_size, seq_length, row, col, channel]
-				rmse = np.sqrt(val_loss/(np.prod(y_val.shape)))
+				rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
 				print("at epoch " + str(e) + ", validate loss is " + str(self.preprocessing.real_loss(rmse)))
 				print "elapsed time: ", time.time() - start_t
 
@@ -122,14 +122,14 @@ class ModelSolver(object):
 					print "model-%s saved." % (e+1)
 
 	def test(self, data, save_outputs=True):
-		x = np.asarray(data['x'])
-		y = np.asarray(data['y'])
+		# x = np.asarray(data['x'])
+		# y = np.asarray(data['y'])
 
 		# build graphs
 		y_, loss = self.model.build_model()
 
 		#y = np.asarray(y)
-		y_pred_all = np.ndarray(y.shape)
+		y_pred_all = np.ndarray(np.array(y).shape)
 		
 		#y_real = tf.convert_to_tensor(y)
 		#loss = 2*tf.nn.l2_loss(y_real-y_)
@@ -145,17 +145,17 @@ class ModelSolver(object):
 			t_loss = 0
 			for i in range(len(y)):
 				if self.cross_val:
-					feed_dict = {self.model.x_c: x[i][0], self.model.x_p: x[i][1], self.model.x_t: x[i][2], 
-									self.model.x_ext:x[i][3], 
-									self.model.y: y[i]}
+					feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
+									self.model.x_ext: np.array(x[i][3]), 
+									self.model.y: np.array(y[i])}
 				else:
-					feed_dict = {self.model.x: x[i], self.model.y: y[i]}
+					feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 				y_pred_all[i] = y_p
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
-			rmse = np.sqrt(t_loss/(np.prod(y.shape)))
+			rmse = np.sqrt(t_loss/(np.prod(np.array(y).shape)))
 			print("test loss is " + str(self.preprocessing.real_loss(rmse)))
 			print("elapsed time: ", time.time() - start_t)
 			if save_outputs:
