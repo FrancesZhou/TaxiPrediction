@@ -20,7 +20,7 @@ class ResNet(object):
 		self.x_p = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[1][0]*self.nb_flow])
 		self.x_t = tf.placeholder(tf.float32, [None, self.row, self.col, self.input_conf[2][0]*self.nb_flow])
 		# for external input
-		self.x_ext = tf.placeholder(tf.float32, [None, self.input_conf[-1]])
+		self.x_ext = tf.placeholder(tf.float32, [None, 8])
 		#conf = self.input_conf[0]
 		self.y = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 
