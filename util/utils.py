@@ -19,7 +19,8 @@ def load_data(filename, split):
 def load_h5data(fname):
 	f = h5py.File(fname, 'r')
 	data = f['data'].value
-	data = np.transpose(np.asarray(data), (0,2,3,1))
+	data = np.asarray(data)
+	#data = np.transpose(np.asarray(data), (0,2,3,1))
 	timestamps = f['date'].value
 	f.close()
 	return data, timestamps
@@ -105,7 +106,7 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 			for b in range(batch_size):
 				if i+b >= num:
 					break
-				x_.append(data[i+b-np.array(depends[d]), :, :, :])
+				x_.append(np.transpose(np.vstack(data[i+b-np.array(depends[d]), :, :, :]), [1,2,0]))
 			x_b.append(x_)
 		# external features
 		x_b.append(ext[i])

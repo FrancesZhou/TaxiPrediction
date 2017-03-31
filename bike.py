@@ -3,8 +3,10 @@ import tensorflow as tf
 import sys
 #from sklearn.cluster import KMeans
 from solver import ModelSolver
-# sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
-# sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+# for mac debug
+sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
+sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+# for server running
 sys.path.append('/home/zx/TaxiPrediction/model/')
 sys.path.append('./util/')
 sys.path.append('./data/')
@@ -69,7 +71,7 @@ def main():
     train_data = data[:-FLAGS.test_num]
     train_timestamps = timestamps[:-FLAGS.test_num]
     test_data = data[pre_index-FLAGS.test_num:]
-    test_timestamps = timestamps[pre_index-FLAGS.test_num]
+    test_timestamps = timestamps[pre_index-FLAGS.test_num:]
     print('get batch data...')
     train_x, train_y = batch_data_cpt_ext(train_data, train_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
     test_x, test_y = batch_data_cpt_ext(test_data, test_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
