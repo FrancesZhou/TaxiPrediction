@@ -35,6 +35,10 @@ class ModelSolver(object):
 			os.makedirs(self.log_path)
 
 	def train(self):
+		raw_x = x = self.data['x']
+		raw_y = y = self.data['y']
+		x_val = self.val_data['x']
+		y_val = self.val_data['y']
 		# x = np.asarray(self.data['x'])
 		# y = np.asarray(self.data['y'])
 		# x_val = np.asarray(self.val_data['x'])
@@ -79,7 +83,7 @@ class ModelSolver(object):
 				curr_loss = 0
 				# cross validation
 				if self.cross_val:
-					x, y, x_val, y_val = train_test_split(x, y, test_size=0.1, random_state=50)
+					x, y, x_val, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
 				for i in range(len(x)):
 					if self.cross_val:
 						feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
