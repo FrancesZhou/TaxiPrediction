@@ -16,14 +16,14 @@ class ResNet(object):
 		self.batch_size = batch_size
 		self.layer = layer
 		self.layer_param = layer_param
-		self.inputs = []
+		self.x = []
 		for i in range(len(input_conf)-1):
 			conf = self.input_conf[i]
-			self.inputs.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
+			self.x.append(tf.placeholder(tf.float32, [None, conf[2], conf[3], conf[0]*conf[1]]))
 		# for external input
-		self.inputs.append(tf.placeholder(tf.float32, [None, 8]))
+		self.x.append(tf.placeholder(tf.float32, [None, 8]))
 		#conf = self.input_conf[0]
-		self.output = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
+		self.y = tf.placeholder(tf.float32, [None, self.row, self.col, self.nb_flow])
 
 		self.weight_initializer = tf.contrib.layers.xavier_initializer()
 		self.const_initializer = tf.constant_initializer()
@@ -70,15 +70,15 @@ class ResNet(object):
 	
 	def fusion(self, x, idx):
 		# x: [batch_size, row, col, nb_flow]
-		with tf.variable_scope('fusion_input_{0}',format(idx)) as scope:
+		with tf.variable_scope('fusion_input_{0}'.format(idx)) as scope:
 			shape = x.get_shape().as_list()
 			w = tf.get_variable('w', [shape[1], shape[2]], initializer=self.weight_initializer)
-			w_tile = tf.tile(tf.expand_dims(tf.expand_dims(w,axis=-1), axis=0), [shape[0],1,1,shape[-1]])
-			return tf.multiply(w_tile, x)
+			w_extend = tf.expand_dims(w,axis=-1)
+			return tf.multiply(w_extend, x)
 
 	def build_model(self):
-		x = self.inputs
-		y = self.output
+		x = self.x
+		y = self.y
 		#input_conf = self.input_conf
 		layer = self.layer
 		param = self.layer_param
@@ -102,12 +102,12 @@ class ResNet(object):
 		print(y_all.get_shape().as_list())
 		y_sum = tf.reduce_sum(y_all, axis=0, name='y_main')
 		# external
-		print(i)
-		y_ext = tf.layers.dense(x[i], units=10, activation='relu', use_bias=True, 
+		#print(i)
+		y_ext = tf.layers.dense(x[-1], units=10, activation=tf.nn.relu, use_bias=True, 
 			kernel_initializer=self.weight_initializer, bias_initializer=self.const_initializer,
 			name='external_dense_1')
 		y_ext = tf.layers.dense(y_ext, units=self.nb_flow*self.row*self.col, 
-			activation='relu', use_bias=True, 
+			activation=tf.nn.relu, use_bias=True, 
 			kernel_initializer=self.weight_initializer, bias_initializer=self.const_initializer,
 			name='external_dense_2')
 		y_ext = tf.reshape(y_ext, [-1, self.row, self.col, self.nb_flow], name='y_ext')
