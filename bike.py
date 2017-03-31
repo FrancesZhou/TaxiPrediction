@@ -1,13 +1,13 @@
 import numpy as np
 import tensorflow as tf
 import sys
-from sklearn.cluster import KMeans
+#from sklearn.cluster import KMeans
 from solver import ModelSolver
-sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
-sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
-# sys.path.append('/home/zx/TaxiPrediction/model/')
-# sys.path.append('./util/')
-# sys.path.append('./data/')
+# sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
+# sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+sys.path.append('/home/zx/TaxiPrediction/model/')
+sys.path.append('./util/')
+sys.path.append('./data/')
 
 from ResNet import *
 from preprocessing import *
