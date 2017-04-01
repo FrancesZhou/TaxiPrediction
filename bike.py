@@ -74,9 +74,9 @@ def main():
     #print(len(test_y))
     train = {'x': train_x, 'y': train_y}
     test = {'x': test_x, 'y': test_y}
-    nb_flow = data.shape[1]
-    row = data.shape[2]
-    col = data.shape[3]
+    nb_flow = data.shape[-1]
+    row = data.shape[1]
+    col = data.shape[2]
     print('build ResNet model...')
     model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
         [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 

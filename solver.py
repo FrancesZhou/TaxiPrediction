@@ -4,6 +4,8 @@ import time
 import os
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+import sys
+sys.path.append('./util/')
 from utils import *
 
 class ModelSolver(object):
@@ -218,9 +220,14 @@ class ModelSolver(object):
 				for n_i in range(n):
 					x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
 										batch_size=1, close=close, period=period, trend=trend)
-					feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
-								self.model.x_ext: np.array(x[i][3]), 
-								self.model.y: np.array(y[i])}
+					print(np.array(x[0][0]).shape)
+					print(np.array(x[0][1]).shape)
+					print(np.array(x[0][2]).shape)
+					print(np.array(x[0][3]).shape)
+					print(np.array(y[0]).shape)
+					feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
+								self.model.x_ext: np.array(x[0][3]), 
+								self.model.y: np.array(y[0])}
 					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 					seq_i[n_i+pre_index] = y_p
 					loss_i += l
