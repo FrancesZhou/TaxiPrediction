@@ -220,11 +220,11 @@ class ModelSolver(object):
 				for n_i in range(n):
 					x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
 										batch_size=1, close=close, period=period, trend=trend)
-					print(np.array(x[0][0]).shape)
-					print(np.array(x[0][1]).shape)
-					print(np.array(x[0][2]).shape)
-					print(np.array(x[0][3]).shape)
-					print(np.array(y[0]).shape)
+					#print(np.array(x[0][0]).shape)
+					#print(np.array(x[0][1]).shape)
+					#print(np.array(x[0][2]).shape)
+					#print(np.array(x[0][3]).shape)
+					#print(np.array(y[0]).shape)
 					feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
 								self.model.x_ext: np.array(x[0][3]), 
 								self.model.y: np.array(y[0])}
@@ -235,7 +235,9 @@ class ModelSolver(object):
 				t_loss += loss_i
 				i += 1
 			row, col, flow = np.array(seq).shape[1:]
+			#print(row,col,flow)
 			test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
+			#print(test_count)
 			rmse = np.sqrt(t_loss/test_count)
 			print("test loss is " + str(self.preprocessing.real_loss(rmse)))
 			print("elapsed time: ", time.time() - start_t)

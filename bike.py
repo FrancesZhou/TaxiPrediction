@@ -99,7 +99,7 @@ def main():
     print('begin testing for predicting next 1 step')
     solver.test(test)
     # test 1 to n
-    print('begin testing for predicting next %d steps', FLAGS.output_steps)
+    print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
     test_n = {'data': test_data, 'timestamps': test_timestamps}
     solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
 
