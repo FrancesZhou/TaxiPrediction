@@ -98,7 +98,7 @@ class ResNet(object):
 			y_all.append(y_)
 		# sum fusion
 		y_all = tf.stack(y_all)
-		print(y_all.get_shape().as_list())
+		#print(y_all.get_shape().as_list())
 		y_sum = tf.reduce_sum(y_all, axis=0, name='y_main')
 		# external
 		#print(i)

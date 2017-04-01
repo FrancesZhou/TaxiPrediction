@@ -64,7 +64,7 @@ def batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend=4):
 	# data: [num, row, col, channel]
 	num = data.shape[0]
-	flow = data.shape[-1]
+	#flow = data.shape[1]
 	# x: [batches, 
 	#[
 	#[batch_size, row, col, close*flow], 
@@ -84,10 +84,10 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 	# external feature
 	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
 	ext = []
-	for i in vec:
+	for j in vec:
         	v = [0 for _ in range(7)]
-        	v[i] = 1
-        	if i >= 5: 
+        	v[j] = 1
+        	if j >= 5: 
 			v.append(0)  # weekend
         	else:
 			v.append(1)  # weekday
@@ -98,6 +98,9 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 	# y: [batches, batch_size]
 	x = []
 	y = []
+	#y = np.empty(np.ceil(num*1.0/batch_size), dtype=object)
+	#y_i = 0
+	#print(i)
 	while i<num:
 		x_b = np.empty(len(depends)+1, dtype=object)
 		#y_b = []
@@ -115,7 +118,10 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 		# y
 		y_b = np.transpose(data[i:min(i+batch_size, num), :, :, :],[0,2,3,1])
 		x.append(x_b)
+		#print(y_b.shape)
 		y.append(y_b)
+		#y[y_i] = y_b
+		#y_i += 1
 		i += batch_size
 	return x, y
 

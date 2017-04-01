@@ -83,9 +83,16 @@ class ModelSolver(object):
 				curr_loss = 0
 				# cross validation
 				if self.cross_val:
-					x, y, x_val, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
+					x, x_val, y, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
+					#print(np.array(x).shape)
+					#print(np.array(y).shape)
 				for i in range(len(x)):
 					if self.cross_val:
+						#print(x[i][0].shape)
+						#print(x[i][1].shape)
+						#print(x[i][2].shape)
+						#print(x[i][3].shape)
+						#print(np.array(y[i]).shape)
 						feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
 									self.model.x_ext: np.array(x[i][3]), 
 									self.model.y: np.array(y[i])}
@@ -99,7 +106,14 @@ class ModelSolver(object):
 						print("at epoch "+str(e)+', '+str(i))
 						summary = sess.run(summary_op, feed_dict)
 						summary_writer.add_summary(summary, e*len(x) + i)
-				t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
+				print(np.array(y).shape)
+				#compute counts of all regions
+				t_count = 0
+				for c in range(len(y)):
+					#print(np.array(y[c]).shape)
+					t_count += np.prod(np.array(y[c]).shape)
+				t_rmse = np.sqrt(curr_loss/t_count)
+				#t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
 				print("at epoch " + str(e) + ", train loss is " + str(curr_loss)+','+str(t_rmse)+','+ str(self.preprocessing.real_loss(t_rmse)))
 				# validate
 				val_loss = 0
@@ -116,7 +130,13 @@ class ModelSolver(object):
 					val_loss += l
 
 				# y_val : [batches, batch_size, seq_length, row, col, channel]
-				rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
+				print(np.array(y_val).shape)
+				v_count = 0
+				for v in range(len(y_val)):
+					#print(np.array(y_val[v]).shape)
+					v_count += np.prod(np.array(y_val[v]).shape)
+				rmse = np.sqrt(val_loss/v_count)
+				#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
 				print("at epoch " + str(e) + ", validate loss is " + str(self.preprocessing.real_loss(rmse)))
 				print "elapsed time: ", time.time() - start_t
 
@@ -126,14 +146,17 @@ class ModelSolver(object):
 					print "model-%s saved." % (e+1)
 
 	def test(self, data, save_outputs=True):
-		# x = np.asarray(data['x'])
-		# y = np.asarray(data['y'])
+		#x = np.asarray(data['x'])
+		#y = np.asarray(data['y'])
+		x = data['x']
+		y = data['y']
 
 		# build graphs
 		y_, loss = self.model.build_model()
 
 		#y = np.asarray(y)
-		y_pred_all = np.ndarray(np.array(y).shape)
+		#y_pred_all = np.ndarray(np.array(y).shape)
+		y_pred_all = []
 		
 		#y_real = tf.convert_to_tensor(y)
 		#loss = 2*tf.nn.l2_loss(y_real-y_)
@@ -155,11 +178,18 @@ class ModelSolver(object):
 				else:
 					feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-				y_pred_all[i] = y_p
+				#y_pred_all[i] = y_p
+				y_pred_all.append(y_p)
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
-			rmse = np.sqrt(t_loss/(np.prod(np.array(y).shape)))
+			print(np.array(y).shape)
+			test_count = 0
+			for t in range(len(y)):
+				#print(np.array(y[t]).shape)
+				test_count += np.prod(np.array(y[t]).shape)
+			rmse = np.sqrt(t_loss/test_count)
+			#rmse = np.sqrt(t_loss/(np.prod(np.array(y).shape)))
 			print("test loss is " + str(self.preprocessing.real_loss(rmse)))
 			print("elapsed time: ", time.time() - start_t)
 			if save_outputs:
