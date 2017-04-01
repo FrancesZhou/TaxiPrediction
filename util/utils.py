@@ -82,28 +82,14 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 	depends = np.asarray(depends)
 	i = max(c*close, p*period, t*trend)
 	# external feature
-	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
-	ext = []
-	for j in vec:
-        	v = [0 for _ in range(7)]
-        	v[j] = 1
-        	if j >= 5: 
-			v.append(0)  # weekend
-        	else:
-			v.append(1)  # weekday
-        	ext.append(v)
-	ext = np.asarray(ext)
+	ext = external_feature(timestamps)
 	# ext plus c p t
 	# x: [batches, 4, batch_size]
 	# y: [batches, batch_size]
 	x = []
 	y = []
-	#y = np.empty(np.ceil(num*1.0/batch_size), dtype=object)
-	#y_i = 0
-	#print(i)
 	while i<num:
 		x_b = np.empty(len(depends)+1, dtype=object)
-		#y_b = []
 		for d in range(len(depends)):
 			x_ = []
 			for b in range(batch_size):
@@ -120,10 +106,22 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 		x.append(x_b)
 		#print(y_b.shape)
 		y.append(y_b)
-		#y[y_i] = y_b
-		#y_i += 1
 		i += batch_size
 	return x, y
+
+def external_feature(timestamps):
+	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
+	ext = []
+	for j in vec:
+        	v = [0 for _ in range(7)]
+        	v[j] = 1
+        	if j >= 5: 
+			v.append(0)  # weekend
+        	else:
+			v.append(1)  # weekday
+        	ext.append(v)
+	ext = np.asarray(ext)
+	return ext
 
 def shuffle_batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 	num = data.shape[0]

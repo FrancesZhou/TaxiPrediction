@@ -48,15 +48,6 @@ tf.app.flags.DEFINE_integer('cluster_num', 128,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
-# tf.app.flags.DEFINE_float('weight_init', .1,
-#                             """weight init for fully connected layers""")
-
-# tf.app.flags.DEFINE_integer('input_height', 64,
-#                             """height of input frame""")
-# tf.app.flags.DEFINE_integer('input_width', 64,
-#                             """width of input frame""")
-# tf.app.flags.DEFINE_integer('input_channel', 1,
-#                             """channels of input frame""")
 
 def main():
     # load train dataset
@@ -78,26 +69,15 @@ def main():
     # train_x = x[:-FLAGS.test_num]
     # test_x = x[-FLAGS.test_num:]
     # train_y = y[:-FLAGS.test_num]
-    # test_y = y[-FLAGS.test_num:]
-    
+    # test_y = y[-FLAGS.test_num:]  
     #print(len(train_y))
     #print(len(test_y))
     train = {'x': train_x, 'y': train_y}
     test = {'x': test_x, 'y': test_y}
-
-    #input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
     nb_flow = data.shape[1]
     row = data.shape[2]
     col = data.shape[3]
     print('build ResNet model...')
-    # model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
-    #     [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
-    #     layer=['conv', 'res_net', 'conv'],
-    #     layer_param = [ {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':64},
-    #     {'unit_num':3, 
-    #     'res_param':[ {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':64}, 
-    #                   {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':64} ] },
-    #     {'filter':[3,3], 'strides':[1,1,1,1], 'output_features':2} ])
     model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
         [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
         layer=['conv', 'res_net', 'conv'],
@@ -116,7 +96,12 @@ def main():
 
     print('begin training...')
     solver.train()
+    print('begin testing for predicting next 1 step')
     solver.test(test)
+    # test 1 to n
+    print('begin testing for predicting next %d steps', FLAGS.output_steps)
+    test_n = {'data': test_data, 'timestamps': test_timestamps}
+    solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
 
 if __name__ == "__main__":
     main()

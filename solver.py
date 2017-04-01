@@ -4,6 +4,7 @@ import time
 import os
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+from utils import *
 
 class ModelSolver(object):
 	def __init__(self, model, data, val_data, preprocessing, **kwargs):
@@ -194,6 +195,45 @@ class ModelSolver(object):
 			print("elapsed time: ", time.time() - start_t)
 			if save_outputs:
 				np.save('test_outputs.npy',y_pred_all)
+
+	def test_1_to_n(self, data, n=10, close=3, period=4, trend=4, save_outputs=True):
+		seq = data['data']
+		timestamps = data['timestamps']
+		pre_index = max(close*1, period*24, trend*24*7)
+		# build graphs
+		y_, loss = self.model.build_model()
+		y_pred_all = []
+		with tf.Session() as sess:
+			saver = tf.train.Saver()
+			saver.restore(sess, self.test_model)
+			start_t = time.time()
+			#y_pred_all = np.ndarray(y.shape)
+			t_loss = 0
+			i = pre_index
+			while i<len(seq)-n:
+				# seq_i : pre_index+n
+				seq_i = seq[i-pre_index: i+n]
+				time_i = timestamps[i-pre_index: i+n]
+				loss_i = 0
+				for n_i in range(n):
+					x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
+										batch_size=1, close=close, period=period, trend=trend)
+					feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
+								self.model.x_ext: np.array(x[i][3]), 
+								self.model.y: np.array(y[i])}
+					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
+					seq_i[n_i+pre_index] = y_p
+					loss_i += l
+				y_pred_all.append(seq_i[pre_index:])
+				t_loss += loss_i
+				i += 1
+			row, col, flow = np.array(seq).shape[1:]
+			test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
+			rmse = np.sqrt(t_loss/test_count)
+			print("test loss is " + str(self.preprocessing.real_loss(rmse)))
+			print("elapsed time: ", time.time() - start_t)
+			if save_outputs:
+				np.save('test_n_outputs.npy',y_pred_all)
 
 
 
