@@ -107,6 +107,7 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 				if i+b >= num:
 					break
 				x_.append(np.transpose(np.vstack(data[i+b-np.array(depends[d]), :, :, :]), [1,2,0]))
+			x_ = np.array(x_)
 			x_b.append(x_)
 		# external features
 		x_b.append(ext[i:min(i+batch_size, num)])
