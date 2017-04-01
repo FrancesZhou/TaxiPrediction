@@ -99,7 +99,7 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 	x = []
 	y = []
 	while i<num:
-		x_b = []
+		x_b = np.empty(len(depends)+1, dtype=object)
 		#y_b = []
 		for d in range(len(depends)):
 			x_ = []
@@ -108,9 +108,10 @@ def batch_data_cpt_ext(data, timestamps, batch_size=32, close=3, period=4, trend
 					break
 				x_.append(np.transpose(np.vstack(data[i+b-np.array(depends[d]), :, :, :]), [1,2,0]))
 			x_ = np.array(x_)
-			x_b.append(x_)
+			x_b[d] = x_
+			#x_b.append(x_)
 		# external features
-		x_b.append(ext[i:min(i+batch_size, num)])
+		x_b[-1] = ext[i:min(i+batch_size, num)]
 		# y
 		y_b = np.transpose(data[i:min(i+batch_size, num), :, :, :],[0,2,3,1])
 		x.append(x_b)
