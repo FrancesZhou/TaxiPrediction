@@ -32,11 +32,11 @@ tf.app.flags.DEFINE_integer('output_steps', 10,
                             """num of output_steps""")
 tf.app.flags.DEFINE_integer('batch_size', 16,
                             """batch size for training""")
-tf.app.flags.DEFINE_integer('n_epochs', 30,
+tf.app.flags.DEFINE_integer('n_epochs', 50,
                             """num of epochs""")
 tf.app.flags.DEFINE_float('keep_prob', .9,
                             """for dropout""")
-tf.app.flags.DEFINE_float('lr', .000001,
+tf.app.flags.DEFINE_float('lr', .0002,
                             """for dropout""")
 tf.app.flags.DEFINE_string('update_rule', 'adam',
                             """update rule""")
