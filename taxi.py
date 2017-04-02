@@ -60,13 +60,14 @@ def main():
     data, train_data, val_data, test_data = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=split)
     # data: [num, row, col, channel]
     print('preprocess train data...')
-    train_data = pre_process.fit_transform(train_data)
+    pre_process.fit(train_data)
     
     if FLAGS.model=='ResNet':
         pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
         all_timestamps = gen_timestamps(['2009','2010','2011','2012','2013','2014','2015'])
         data = pre_process.transform(data)
         # train_data = train_data
+        train_data = data[:split[0]]
         val_data = data[split[0]-pre_index:split[0]+split[1]]
         test_data = data[split[0]+split[1]-pre_index:split[0]+split[1]+split[2]]
         # get train, validate, test timestamps
@@ -111,6 +112,7 @@ def main():
         test_n = {'data': test_data, 'timestamps': test_timestamps}
         solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
     else:
+        train_data = pre_process.transform(train_data)
         train_x, train_y = batch_data(data=train_data, batch_size=FLAGS.batch_size,
             input_steps=FLAGS.input_steps, output_steps=FLAGS.output_steps)
         val_data = pre_process.transform(val_data)
