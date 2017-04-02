@@ -113,13 +113,13 @@ def external_feature(timestamps):
 	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
 	ext = []
 	for j in vec:
-        v = [0 for _ in range(7)]
-        v[j] = 1
-        if j >= 5:
+		v = [0 for _ in range(7)]
+		v[j] = 1
+		if j >= 5:
 			v.append(0)  # weekend
-        else:
+		else:
 			v.append(1)  # weekday
-        ext.append(v)
+		ext.append(v)
 	ext = np.asarray(ext)
 	return ext
 
