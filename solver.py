@@ -123,7 +123,7 @@ class ModelSolver(object):
 				val_loss = 0
 				y_pred_all = np.ndarray(np.array(y_val).shape)
 				for i in range(len(y_val)):
-					if self.cross_val:
+					if self.cpt_ext:
 						feed_dict = {self.model.x_c: np.array(x_val[i][0]), self.model.x_p: np.array(x_val[i][1]), self.model.x_t: np.array(x_val[i][2]), 
 									self.model.x_ext: np.array(x_val[i][3]), 
 									self.model.y: np.array(y_val[i])}
