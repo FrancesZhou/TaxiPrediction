@@ -15,6 +15,7 @@ class ModelSolver(object):
 		self.val_data = val_data
 		self.preprocessing = preprocessing
 		self.cross_val = kwargs.pop('cross_val', False)
+		self.cpt_ext = kwargs.pop('cpt_ext', False)
 		self.n_epochs = kwargs.pop('n_epochs', 10)
 		self.batch_size = kwargs.pop('batch_size', 32)
 		self.learning_rate = kwargs.pop('learning_rate', 0.000001)
@@ -90,7 +91,7 @@ class ModelSolver(object):
 					#print(np.array(x).shape)
 					#print(np.array(y).shape)
 				for i in range(len(x)):
-					if self.cross_val:
+					if self.cpt_ext:
 						#print(x[i][0].shape)
 						#print(x[i][1].shape)
 						#print(x[i][2].shape)
@@ -174,7 +175,7 @@ class ModelSolver(object):
 			#y_pred_all = np.ndarray(y.shape)
 			t_loss = 0
 			for i in range(len(y)):
-				if self.cross_val:
+				if self.cpt_ext:
 					feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]), 
 									self.model.x_ext: np.array(x[i][3]), 
 									self.model.y: np.array(y[i])}

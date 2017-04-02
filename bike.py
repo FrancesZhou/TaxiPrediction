@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import sys
-#from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans
 from solver import ModelSolver
 # for mac debug
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
@@ -10,21 +10,13 @@ sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/
 sys.path.append('/home/zx/TaxiPrediction/model/')
 sys.path.append('./util/')
 sys.path.append('./data/')
-
+from ConvLSTM import *
+from AttConvLSTM import *
 from ResNet import *
 from preprocessing import *
 from utils import *
 
 FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_integer('closeness', 3,
-                            """num of closeness""")
-tf.app.flags.DEFINE_integer('period', 4,
-                            """num of period""")
-tf.app.flags.DEFINE_integer('trend', 4,
-                            """num of trend""")
-tf.app.flags.DEFINE_integer('test_num', 10*24,
-                            """num of test data""")
 
 tf.app.flags.DEFINE_integer('input_steps', 10,
                             """num of input_steps""")
@@ -42,9 +34,22 @@ tf.app.flags.DEFINE_string('update_rule', 'adam',
                             """update rule""")
 tf.app.flags.DEFINE_integer('save_every', 1,
                             """steps to save""")
-tf.app.flags.DEFINE_boolean('use_att', False,
-                            """whether to use attention mechanism""")
+# model: ConvLSTM, AttConvLSTM, ResNet
+tf.app.flags.DEFINE_string('model', 'ConvLSTM',
+                            """which model to train and test""")
+# ResNet
+tf.app.flags.DEFINE_integer('closeness', 3,
+                            """num of closeness""")
+tf.app.flags.DEFINE_integer('period', 4,
+                            """num of period""")
+tf.app.flags.DEFINE_integer('trend', 4,
+                            """num of trend""")
+tf.app.flags.DEFINE_integer('test_num', 10*24,
+                            """num of test data""")
+# AttConvLSTM
 tf.app.flags.DEFINE_integer('cluster_num', 128,
+                            """num of cluster in attention mechanism""")
+tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
@@ -92,7 +97,7 @@ def main():
             learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
             pretrained_model=None, model_path='model_save/ResNet/', 
             test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/', 
-            cross_val=True)
+            cross_val=True, cpt_ext=True)
 
     print('begin training...')
     solver.train()

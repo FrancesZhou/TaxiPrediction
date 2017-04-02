@@ -14,7 +14,7 @@ def load_data(filename, split):
 	validate = data[split[0]:split[0]+split[1],:,:,:]
 	test = data[split[0]+split[1]:split[0]+split[1]+split[2],:,:,:]
 	
-	return train, validate, test
+	return data, train, validate, test
 
 def load_h5data(fname):
 	f = h5py.File(fname, 'r')
@@ -113,15 +113,42 @@ def external_feature(timestamps):
 	vec = [time.strptime(t[:8], '%Y%m%d').tm_wday for t in timestamps]
 	ext = []
 	for j in vec:
-        	v = [0 for _ in range(7)]
-        	v[j] = 1
-        	if j >= 5: 
+        v = [0 for _ in range(7)]
+        v[j] = 1
+        if j >= 5:
 			v.append(0)  # weekend
-        	else:
+        else:
 			v.append(1)  # weekday
-        	ext.append(v)
+        ext.append(v)
 	ext = np.asarray(ext)
 	return ext
+
+def gen_timestamps_for_year(year):
+	month1 = ['0'+str(e) for e in range(1,10)]
+	month2 = [str(e) for e in range(10,13)]
+	month = month1+month2
+	day1 = ['0'+str(e) for e in range(1,10)]
+	day2 = [str(e) for e in range(10,32)]
+	day = day1+day2
+	if year=='2012':
+		day_sum = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+	else:
+		day_sum = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+	timestamps = []
+	for m in range(len(month)):
+		for d in range(day_sum[m]):
+			t = [year+month[m]+day[d]]
+			t_d = t*24
+			timestamps.append(t_d[:])
+ 	timestamps = np.hstack(np.array(timestamps))
+ 	return timestamps
+
+def gen_timestamps(years):
+	timestamps = []
+	for y in years:
+		timestamps.append(gen_timestamps_for_year(y))
+	timestamps = np.hstack(np.array(timestamps))
+	return timestamps
 
 def shuffle_batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 	num = data.shape[0]
@@ -141,12 +168,6 @@ def shuffle_batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 		y.append(batch_y)
 		i += batch_size
 	return x, y
-
-
-# show pick-up map and drop-off map
-#def imshow_map():
-
-
 
 def load_pickle(path):
 	with open(path, 'rb') as f:
