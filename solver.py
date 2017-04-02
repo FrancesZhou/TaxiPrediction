@@ -121,7 +121,6 @@ class ModelSolver(object):
 				print("at epoch " + str(e) + ", train loss is " + str(curr_loss)+','+str(t_rmse)+','+ str(self.preprocessing.real_loss(t_rmse)))
 				# validate
 				val_loss = 0
-				y_pred_all = np.ndarray(np.array(y_val).shape)
 				for i in range(len(y_val)):
 					if self.cpt_ext:
 						feed_dict = {self.model.x_c: np.array(x_val[i][0]), self.model.x_p: np.array(x_val[i][1]), self.model.x_t: np.array(x_val[i][2]), 
@@ -129,8 +128,7 @@ class ModelSolver(object):
 									self.model.y: np.array(y_val[i])}
 					else:
 						feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
-					y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-					y_pred_all[i] = y_p
+					_, l = sess.run([y_, loss], feed_dict=feed_dict)
 					val_loss += l
 
 				# y_val : [batches, batch_size, seq_length, row, col, channel]
@@ -182,8 +180,10 @@ class ModelSolver(object):
 				else:
 					feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
 				y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-				#y_pred_all[i] = y_p
-				y_pred_all.append(y_p)
+				if len(y_pred_all)==0:
+					y_pred_all = np.vstack(y_p)
+				else:
+					y_pred_all = np.vstack((y_pred_all, y_p))
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
