@@ -183,7 +183,7 @@ class ModelSolver(object):
 				if len(y_pred_all)==0:
 					y_pred_all = np.vstack(y_p)
 				else:
-					y_pred_all = np.vstack((y_pred_all, y_p))
+					y_pred_all = np.vstack((y_pred_all, np.vstack(y_p)))
 				t_loss += l
 				
 			# y : [batches, batch_size, seq_length, row, col, channel]
