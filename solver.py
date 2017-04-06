@@ -38,7 +38,7 @@ class ModelSolver(object):
 		if not os.path.exists(self.log_path):
 			os.makedirs(self.log_path)
 
-	def train(self):
+	def train(self, test_data):
 		raw_x = x = self.data['x']
 		raw_y = y = self.data['y']
 		x_val = self.val_data['x']
@@ -146,6 +146,29 @@ class ModelSolver(object):
 					save_name = self.model_path+'model'
 					saver.save(sess, save_name, global_step=e+1)
 					print "model-%s saved." % (e+1)
+			# ============================ for test data ===============================
+			x_test = test_data['x']
+			y_test = test_data['y']
+			t_loss = 0
+			for i in range(len(y_test)):
+				if self.cpt_ext:
+					feed_dict = {self.model.x_c: np.array(x_test[i][0]), self.model.x_p: np.array(x_test[i][1]), self.model.x_t: np.array(x_test[i][2]), 
+								self.model.x_ext: np.array(x_test[i][3]), 
+								self.model.y: np.array(y_test[i])}
+				else:
+					feed_dict = {self.model.x: x_test[i], self.model.y: y_test[i]}
+				_, l = sess.run([y_, loss], feed_dict=feed_dict)
+				t_loss += l
+
+			# y_val : [batches, batch_size, seq_length, row, col, channel]
+			print(np.array(y_test).shape)
+			t_count = 0
+			for t in range(len(y_test)):
+				#print(np.array(y_val[v]).shape)
+				t_count += np.prod(np.array(y_test[t]).shape)
+			rmse = np.sqrt(t_loss/t_count)
+			#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
+			print("at epoch " + str(e) + ", test loss is " + str(self.preprocessing.real_loss(rmse)))
 
 	def test(self, data, save_outputs=True):
 		#x = np.asarray(data['x'])

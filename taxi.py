@@ -186,7 +186,7 @@ def main():
                 pretrained_model=None, model_path='model_save/AttConvLSTM/', 
                 test_model='model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/AttConvLSTM/')
         print('begin training...')
-        solver.train()
+        solver.train(test)
         print('test trained model...')
         solver.test(test)
 
