@@ -62,51 +62,129 @@ def main():
     print('preprocess data...')
     # data: [num, channel, row, col]
     data = pre_process.fit_transform(data)
-    pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
 
-    train_data = data[:-FLAGS.test_num]
-    train_timestamps = timestamps[:-FLAGS.test_num]
-    test_data = data[-pre_index-FLAGS.test_num:]
-    test_timestamps = timestamps[-pre_index-FLAGS.test_num:]
-    print('get batch data...')
-    train_x, train_y = batch_data_cpt_ext(train_data, train_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
-    test_x, test_y = batch_data_cpt_ext(test_data, test_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
-    # train_x = x[:-FLAGS.test_num]
-    # test_x = x[-FLAGS.test_num:]
-    # train_y = y[:-FLAGS.test_num]
-    # test_y = y[-FLAGS.test_num:]  
-    #print(len(train_y))
-    #print(len(test_y))
-    train = {'x': train_x, 'y': train_y}
-    test = {'x': test_x, 'y': test_y}
-    nb_flow = data.shape[-1]
-    row = data.shape[1]
-    col = data.shape[2]
-    print('build ResNet model...')
-    model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
-        [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
-        layer=['conv', 'res_net', 'conv'],
-        layer_param = [ [[3,3], [1,1,1,1], 64],
-        [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
-        [[3,3], [1,1,1,1], 2] ])
-    print('model solver...')
-    solver = ModelSolver(model, train, train, preprocessing=pre_process,
-            n_epochs=FLAGS.n_epochs, 
-            batch_size=FLAGS.batch_size, 
-            update_rule=FLAGS.update_rule,
-            learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-            pretrained_model=None, model_path='model_save/ResNet/', 
-            test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/', 
-            cross_val=True, cpt_ext=True)
-
-    print('begin training...')
-    solver.train()
-    print('begin testing for predicting next 1 step')
-    solver.test(test)
-    # test 1 to n
-    print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
-    test_n = {'data': test_data, 'timestamps': test_timestamps}
-    solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+    if FLAGS.model=='ResNet':
+        pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
+        train_data = data[:-FLAGS.test_num]
+        train_timestamps = timestamps[:-FLAGS.test_num]
+        test_data = data[-pre_index-FLAGS.test_num:]
+        test_timestamps = timestamps[-pre_index-FLAGS.test_num:]
+        print('get batch data...')
+        train_x, train_y = batch_data_cpt_ext(train_data, train_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+        test_x, test_y = batch_data_cpt_ext(test_data, test_timestamps, batch_size=FLAGS.batch_size, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+        # train_x = x[:-FLAGS.test_num]
+        # test_x = x[-FLAGS.test_num:]
+        # train_y = y[:-FLAGS.test_num]
+        # test_y = y[-FLAGS.test_num:]  
+        #print(len(train_y))
+        #print(len(test_y))
+        train = {'x': train_x, 'y': train_y}
+        test = {'x': test_x, 'y': test_y}
+        nb_flow = data.shape[-1]
+        row = data.shape[1]
+        col = data.shape[2]
+        print('build ResNet model...')
+        model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
+            [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
+            layer=['conv', 'res_net', 'conv'],
+            layer_param = [ [[3,3], [1,1,1,1], 64],
+            [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
+            [[3,3], [1,1,1,1], 2] ])
+        print('model solver...')
+        solver = ModelSolver(model, train, train, preprocessing=pre_process,
+                n_epochs=FLAGS.n_epochs, 
+                batch_size=FLAGS.batch_size, 
+                update_rule=FLAGS.update_rule,
+                learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
+                pretrained_model=None, model_path='model_save/ResNet/', 
+                test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/', 
+                cross_val=True, cpt_ext=True)
+        print('begin training...')
+        solver.train()
+        print('begin testing for predicting next 1 step')
+        solver.test(test)
+        # test 1 to n
+        print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
+        test_n = {'data': test_data, 'timestamps': test_timestamps}
+        solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+    else:
+        train_data = data[:-FLAGS.test_num]
+        test_data = data[-FLAGS.input_steps-FLAGS.test_num:]
+        print('get batch data...')
+        train_x, train_y = batch_data(data=train_data, batch_size=FLAGS.batch_size,
+            input_steps=FLAGS.input_steps, output_steps=FLAGS.output_steps)
+        test_x, test_y = batch_data(data=test_data, batch_size=FLAGS.batch_size,
+            input_steps=FLAGS.input_steps, output_steps=FLAGS.output_steps)
+        train = {'x': train_x, 'y': train_y}
+        test = {'x': test_x, 'y': test_y}
+        input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
+        # train_data: [num, 16, 8, 2]
+        if FLAGS.model=='ConvLSTM':
+            print('build ConvLSTM model...')
+            model = ConvLSTM(input_dim=input_dim, batch_size=FLAGS.batch_size, 
+                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
+                'decoder': ['conv_lstm', 'conv_lstm', 'conv', 'conv']}, 
+                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 16], 
+                [[16,8], [3,3], 64], 
+                [[16,8], [3,3], 64] ],
+                'decoder': [ [[16,8], [3,3], 64], 
+                [[16,8], [3,3], 64], 
+                [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 2] ]}, 
+                input_steps=10, output_steps=10)
+            print('model solver...')
+            solver = ModelSolver(model, train, val, preprocessing=pre_process,
+                n_epochs=FLAGS.n_epochs, 
+                batch_size=FLAGS.batch_size, 
+                update_rule=FLAGS.update_rule,
+                learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
+                pretrained_model=None, model_path='model_save/ConvLSTM/', 
+                test_model='model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/ConvLSTM/',
+                cross_val=True)
+        elif FLAGS.model=='AttConvLSTM':
+            # k-means to cluster train_data
+            # train_data: [num, row, col, channel]
+            print('k-means to cluster...')
+            vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+            #init_vectors = vector_data[:FLAGS.cluster_num, :]
+            #cluster_centroid = init_vectors
+            kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
+            cluster_centroid = kmeans.cluster_centers_
+            # reshape to [cluster_num, row, col, channel]
+            cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+            # build model
+            print('build AttConvLSTM model...')
+            model = AttConvLSTM(input_dim=input_dim, 
+                att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes, 
+                batch_size=FLAGS.batch_size, 
+                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
+                'decoder': ['conv_lstm', 'conv_lstm', 'conv', 'conv'],
+                'attention': ['conv', 'conv']}, 
+                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 16], 
+                [[16,8], [3,3], 64], 
+                [[16,8], [3,3], 64] ],
+                'decoder': [ [[16,8], [3,3], 64], 
+                [[16,8], [3,3], 64], 
+                [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 2] ],
+                'attention': [ [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 16] ]}, 
+                input_steps=10, output_steps=10)
+            print('model solver...')
+            solver = ModelSolver(model, train, val, preprocessing=pre_process,
+                n_epochs=FLAGS.n_epochs, 
+                batch_size=FLAGS.batch_size, 
+                update_rule=FLAGS.update_rule,
+                learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
+                pretrained_model=None, model_path='model_save/AttConvLSTM/', 
+                test_model='model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/AttConvLSTM/',
+                cross_val=True)
+        print('begin training...')
+        solver.train()
+        print('test trained model...')
+        solver.test(test)
 
 if __name__ == "__main__":
     main()
