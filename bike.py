@@ -60,7 +60,7 @@ def main():
     print('load data...')
     data, timestamps = load_h5data('./data/NYC14_M16x8_T60_NewEnd.h5')
     print('preprocess data...')
-    # data: [num, channel, row, col]
+    # data: [num, row, col, channel]
     data = pre_process.fit_transform(data)
 
     if FLAGS.model=='ResNet':

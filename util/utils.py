@@ -161,8 +161,8 @@ def gen_timestamps_for_year_ymdh(year):
 		day_sum = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 	else:
 		day_sum = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-	hour1 = ['0'+str(e) for e in range(1,10)]
-	hour2 = [str(e) for e in range(10,25)]
+	hour1 = ['0'+str(e) for e in range(0,10)]
+	hour2 = [str(e) for e in range(10,24)]
 	hour = hour1+hour2
 	timestamps = []
 	for m in range(len(month)):

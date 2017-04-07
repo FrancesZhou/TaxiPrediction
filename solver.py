@@ -174,11 +174,10 @@ class ModelSolver(object):
 				print('test for next n steps...')
 				seq = test_1_to_n_data['data']
 				timestamps = test_1_to_n_data['timestamps']
-				pre_index = max(close*1, period*24, trend*24*7)
-				
-				y_pred_all = []
+				pre_index = max(self.model.input_conf[0][0]*1, self.model.input_conf[1][0]*24, self.model.input_conf[2][0]*24*7)
+				n = 10
 				with tf.Session() as sess:
-					start_t = time.time()
+					#start_t = time.time()
 					t_loss = 0
 					i = pre_index
 					while i<len(seq)-n:
@@ -204,9 +203,9 @@ class ModelSolver(object):
 					print(test_count)
 					rmse = np.sqrt(t_loss/test_count)
 					print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
-					print("elapsed time: ", time.time() - start_t)
-					if save_outputs:
-						np.save('test_n_outputs.npy',y_pred_all)
+					#print("elapsed time: ", time.time() - start_t)
+					# if save_outputs:
+					# 	np.save('test_n_outputs.npy',y_pred_all)
 
 
 	def test(self, data, save_outputs=True):
