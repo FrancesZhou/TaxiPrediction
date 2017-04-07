@@ -176,6 +176,9 @@ class ModelSolver(object):
 				timestamps = test_1_to_n_data['timestamps']
 				pre_index = max(self.model.input_conf[0][0]*1, self.model.input_conf[1][0]*24, self.model.input_conf[2][0]*24*7)
 				n = 10
+				close = 3
+				period = 4
+				trend = 4
 				with tf.Session() as sess:
 					#start_t = time.time()
 					t_loss = 0
