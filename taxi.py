@@ -104,13 +104,14 @@ def main():
                 test_model='model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='log/ResNet/', 
                 cross_val=False, cpt_ext=True)
         print('begin training...')
-        solver.train()
-        print('begin testing for predicting next 1 step')
-        solver.test(test)
-        # test 1 to n
-        print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
         test_n = {'data': test_data, 'timestamps': test_timestamps}
-        solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+        solver.train(test, test_n)
+        #print('begin testing for predicting next 1 step')
+        #solver.test(test)
+        # test 1 to n
+        #print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
+        #test_n = {'data': test_data, 'timestamps': test_timestamps}
+        #solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
     else:
         train_data = pre_process.transform(train_data)
         train_x, train_y = batch_data(data=train_data, batch_size=FLAGS.batch_size,

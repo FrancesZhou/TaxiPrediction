@@ -143,12 +143,37 @@ def gen_timestamps_for_year(year):
  	timestamps = np.hstack(np.array(timestamps))
  	return timestamps
 
-def gen_timestamps(years):
+def gen_timestamps(years, gen_timestamps_for_year=gen_timestamps_for_year):
 	timestamps = []
 	for y in years:
 		timestamps.append(gen_timestamps_for_year(y))
 	timestamps = np.hstack(np.array(timestamps))
 	return timestamps
+
+def gen_timestamps_for_year_ymdh(year):
+	month1 = ['0'+str(e) for e in range(1,10)]
+	month2 = [str(e) for e in range(10,13)]
+	month = month1+month2
+	day1 = ['0'+str(e) for e in range(1,10)]
+	day2 = [str(e) for e in range(10,32)]
+	day = day1+day2
+	if year=='2012':
+		day_sum = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+	else:
+		day_sum = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+	hour1 = ['0'+str(e) for e in range(1,10)]
+	hour2 = [str(e) for e in range(10,25)]
+	hour = hour1+hour2
+	timestamps = []
+	for m in range(len(month)):
+		for d in range(day_sum[m]):
+			#t = [year+month[m]+day[d]]
+			t_d = []
+			for h in range(24):
+				t_d.append(year+month[m]+day[d]+hour[h])
+			timestamps.append(t_d[:])
+ 	timestamps = np.hstack(np.array(timestamps))
+ 	return timestamps
 
 def shuffle_batch_data(data, batch_size=32, input_steps=10, output_steps=10):
 	num = data.shape[0]

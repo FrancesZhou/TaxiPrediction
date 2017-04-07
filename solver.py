@@ -38,7 +38,7 @@ class ModelSolver(object):
 		if not os.path.exists(self.log_path):
 			os.makedirs(self.log_path)
 
-	def train(self, test_data):
+	def train(self, test_data, test_1_to_n_data=[]):
 		raw_x = x = self.data['x']
 		raw_y = y = self.data['y']
 		x_val = self.val_data['x']
@@ -48,7 +48,6 @@ class ModelSolver(object):
 		# x_val = np.asarray(self.val_data['x'])
 		# y_val = np.asarray(self.val_data['y'])
 		#print('shape of x: '+x.shape())
-
 		# build graphs
 		y_, loss = self.model.build_model()
 
@@ -118,7 +117,7 @@ class ModelSolver(object):
 					t_count += np.prod(np.array(y[c]).shape)
 				t_rmse = np.sqrt(curr_loss/t_count)
 				#t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
-				print("at epoch " + str(e) + ", train loss is " + str(curr_loss)+','+str(t_rmse)+','+ str(self.preprocessing.real_loss(t_rmse)))
+				print("at epoch " + str(e) + ", train loss is " + str(curr_loss) + ' , ' + str(t_rmse) + ' , ' + str(self.preprocessing.real_loss(t_rmse)))
 				# validate
 				val_loss = 0
 				for i in range(len(y_val)):
@@ -139,7 +138,7 @@ class ModelSolver(object):
 					v_count += np.prod(np.array(y_val[v]).shape)
 				rmse = np.sqrt(val_loss/v_count)
 				#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
-				print("at epoch " + str(e) + ", validate loss is " + str(self.preprocessing.real_loss(rmse)))
+				print("at epoch " + str(e) + ", validate loss is " + str(val_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
 				print "elapsed time: ", time.time() - start_t
 
 				if (e+1)%self.save_every == 0:
@@ -147,6 +146,7 @@ class ModelSolver(object):
 					saver.save(sess, save_name, global_step=e+1)
 					print "model-%s saved." % (e+1)
 			# ============================ for test data ===============================
+			print('test for test data...')
 			x_test = test_data['x']
 			y_test = test_data['y']
 			t_loss = 0
@@ -168,7 +168,46 @@ class ModelSolver(object):
 				t_count += np.prod(np.array(y_test[t]).shape)
 			rmse = np.sqrt(t_loss/t_count)
 			#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
-			print("at epoch " + str(e) + ", test loss is " + str(self.preprocessing.real_loss(rmse)))
+			print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
+			# ============================= for test 1_to_n ==============================
+			if self.cpt_ext:
+				print('test for next n steps...')
+				seq = test_1_to_n_data['data']
+				timestamps = test_1_to_n_data['timestamps']
+				pre_index = max(close*1, period*24, trend*24*7)
+				
+				y_pred_all = []
+				with tf.Session() as sess:
+					start_t = time.time()
+					t_loss = 0
+					i = pre_index
+					while i<len(seq)-n:
+						# seq_i : pre_index+n
+						seq_i = seq[i-pre_index: i+n]
+						time_i = timestamps[i-pre_index: i+n]
+						loss_i = 0
+						for n_i in range(n):
+							x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
+												batch_size=1, close=close, period=period, trend=trend)
+							feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
+										self.model.x_ext: np.array(x[0][3]), 
+										self.model.y: np.array(y[0])}
+							y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
+							seq_i[n_i+pre_index] = y_p
+							loss_i += l
+						y_pred_all.append(seq_i[pre_index:])
+						t_loss += loss_i
+						i += 1
+					row, col, flow = np.array(seq).shape[1:]
+					print(row,col,flow)
+					test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
+					print(test_count)
+					rmse = np.sqrt(t_loss/test_count)
+					print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
+					print("elapsed time: ", time.time() - start_t)
+					if save_outputs:
+						np.save('test_n_outputs.npy',y_pred_all)
+
 
 	def test(self, data, save_outputs=True):
 		#x = np.asarray(data['x'])
