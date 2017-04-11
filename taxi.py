@@ -28,7 +28,7 @@ tf.app.flags.DEFINE_integer('n_epochs', 30,
                             """num of epochs""")
 tf.app.flags.DEFINE_float('keep_prob', .9,
                             """for dropout""")
-tf.app.flags.DEFINE_float('lr', .00001,
+tf.app.flags.DEFINE_float('lr', .0002,
                             """for dropout""")
 tf.app.flags.DEFINE_string('update_rule', 'adam',
                             """update rule""")
