@@ -179,36 +179,35 @@ class ModelSolver(object):
 				close = 3
 				period = 4
 				trend = 4
-				with tf.Session() as sess:
-					#start_t = time.time()
-					t_loss = 0
-					i = pre_index
-					while i<len(seq)-n:
-						# seq_i : pre_index+n
-						seq_i = seq[i-pre_index: i+n]
-						time_i = timestamps[i-pre_index: i+n]
-						loss_i = 0
-						for n_i in range(n):
-							x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
-												batch_size=1, close=close, period=period, trend=trend)
-							feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
-										self.model.x_ext: np.array(x[0][3]), 
-										self.model.y: np.array(y[0])}
-							y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-							seq_i[n_i+pre_index] = y_p
-							loss_i += l
-						y_pred_all.append(seq_i[pre_index:])
-						t_loss += loss_i
-						i += 1
-					row, col, flow = np.array(seq).shape[1:]
-					print(row,col,flow)
-					test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
-					print(test_count)
-					rmse = np.sqrt(t_loss/test_count)
-					print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
-					#print("elapsed time: ", time.time() - start_t)
-					# if save_outputs:
-					# 	np.save('test_n_outputs.npy',y_pred_all)
+				#start_t = time.time()
+				t_loss = 0
+				i = pre_index
+				while i<len(seq)-n:
+					# seq_i : pre_index+n
+					seq_i = seq[i-pre_index: i+n]
+					time_i = timestamps[i-pre_index: i+n]
+					loss_i = 0
+					for n_i in range(n):
+						x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
+											batch_size=1, close=close, period=period, trend=trend)
+						feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
+									self.model.x_ext: np.array(x[0][3]), 
+									self.model.y: np.array(y[0])}
+						y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
+						seq_i[n_i+pre_index] = y_p
+						loss_i += l
+					y_pred_all.append(seq_i[pre_index:])
+					t_loss += loss_i
+					i += 1
+				row, col, flow = np.array(seq).shape[1:]
+				print(row,col,flow)
+				test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
+				print(test_count)
+				rmse = np.sqrt(t_loss/test_count)
+				print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
+				#print("elapsed time: ", time.time() - start_t)
+				# if save_outputs:
+				# 	np.save('test_n_outputs.npy',y_pred_all)
 
 
 	def test(self, data, save_outputs=True):
