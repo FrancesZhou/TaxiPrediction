@@ -184,6 +184,8 @@ class ModelSolver(object):
 				i = pre_index
 				while i<len(seq)-n:
 					# seq_i : pre_index+n
+					if i%100 == 0:
+						print("test_1_to_n at i = "+str(i))
 					seq_i = seq[i-pre_index: i+n]
 					time_i = timestamps[i-pre_index: i+n]
 					loss_i = 0
@@ -196,7 +198,7 @@ class ModelSolver(object):
 						y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 						seq_i[n_i+pre_index] = y_p
 						loss_i += l
-					y_pred_all.append(seq_i[pre_index:])
+					#y_pred_all.append(seq_i[pre_index:])
 					t_loss += loss_i
 					i += 1
 				row, col, flow = np.array(seq).shape[1:]

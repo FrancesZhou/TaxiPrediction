@@ -135,7 +135,7 @@ def main():
                 [[3,3], [1,1,1,1], 2] ]}, 
                 input_steps=10, output_steps=10)
             print('model solver...')
-            solver = ModelSolver(model, train, val, preprocessing=pre_process,
+            solver = ModelSolver(model, train, train, preprocessing=pre_process,
                 n_epochs=FLAGS.n_epochs, 
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
@@ -174,7 +174,7 @@ def main():
                 [[3,3], [1,1,1,1], 16] ]}, 
                 input_steps=10, output_steps=10)
             print('model solver...')
-            solver = ModelSolver(model, train, val, preprocessing=pre_process,
+            solver = ModelSolver(model, train, train, preprocessing=pre_process,
                 n_epochs=FLAGS.n_epochs, 
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
@@ -184,8 +184,8 @@ def main():
                 cross_val=True)
         print('begin training...')
         solver.train(test)
-        print('test trained model...')
-        solver.test(test)
+        #print('test trained model...')
+        #solver.test(test)
 
 if __name__ == "__main__":
     main()
