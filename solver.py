@@ -190,7 +190,8 @@ class ModelSolver(object):
 				#start_t = time.time()
 				t_loss = 0
 				i = pre_index
-				while i<len(seq)-n:
+				while i<pre_index+3:
+				#while i<len(seq)-n:
 					# seq_i : pre_index+n
 					if i%100 == 0:
 						print("test_1_to_n at i = "+str(i))
@@ -224,7 +225,9 @@ class ModelSolver(object):
 						feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]), self.model.x_t: np.array(x[2]), 
 									self.model.x_ext: np.array(x[3]), 
 									self.model.y: np.array(y)}
-						y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
+						y_p, _ = sess.run([y_, loss], feed_dict=feed_dict)
+						l = np.sum(np.square(y_p-y))
+						print(l)
 						seq_i[n_i+pre_index] = y_p
 						t_loss += l
 						#loss_i += l
