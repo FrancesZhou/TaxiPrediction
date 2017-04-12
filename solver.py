@@ -190,7 +190,7 @@ class ModelSolver(object):
 					time_i = timestamps[i-pre_index: i+n]
 					loss_i = 0
 					for n_i in range(n):
-						x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1], 
+						x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
 											batch_size=1, close=close, period=period, trend=trend)
 						feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
 									self.model.x_ext: np.array(x[0][3]), 
