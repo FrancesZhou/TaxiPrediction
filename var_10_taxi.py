@@ -47,8 +47,10 @@ train_timestamps = timestamps[:split[0]]
 column_name = [str(e) for e in range(1,train_data.shape[1]+1)]
 train_df = pd.DataFrame(train_data, columns=column_name)
 train_df.index = pd.DatetimeIndex(train_timestamps)
+print('create VAR model and fit...')
 model_var = VAR(train_df)
 results = model_var.fit(1)
+print('test trained VAR model...')
 lag_order = results.k_ar
 val_data_preindex = np.vstack((train_data[-lag_order:], val_data))
 #val_predict = np.zeros(val_data.shape)
