@@ -175,11 +175,18 @@ class ModelSolver(object):
 				print('test for next n steps...')
 				seq = test_1_to_n_data['data']
 				timestamps = test_1_to_n_data['timestamps']
-				pre_index = max(self.model.input_conf[0][0]*1, self.model.input_conf[1][0]*24, self.model.input_conf[2][0]*24*7)
+				c = 1
+				p = 24
+				t = 24*7
+				pre_index = max(self.model.input_conf[0][0]*c, self.model.input_conf[1][0]*p, self.model.input_conf[2][0]*t)
 				n = 10
-				close = 3
-				period = 4
-				trend = 4
+				close = self.model.input_conf[0][0]
+				period = self.model.input_conf[1][0]
+				trend = self.model.input_conf[2][0]
+				print(pre_index, n, close, period, trend)
+				depends = [ [c*j for j in range(1, close+1)],
+							[p*j for j in range(1, period+1)],
+							[t*j for j in range(1, trend+1)] ]
 				#start_t = time.time()
 				t_loss = 0
 				i = pre_index
@@ -189,24 +196,33 @@ class ModelSolver(object):
 						print("test_1_to_n at i = "+str(i))
 					seq_i = seq[i-pre_index: i+n]
 					time_i = timestamps[i-pre_index: i+n]
-					loss_i = 0
+					#loss_i = 0
 					for n_i in range(n):
-						x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
-											batch_size=1, close=close, period=period, trend=trend)
+						#x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
+						#					batch_size=1, close=close, period=period, trend=trend)
+						for d in range(len(depends)):
+							x.append(np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[1]), :, :, :],[0,3,1,2])), [1,2,0]))
+						ext_i = time.strptime(time_i[n_i+pre_index][:8], '%Y%m%d').tm_wday
+						v = [0 for _ in range(7)]
+						v[ext_i] = 1
+						if ext_i >= 5:
+							v.append(0)
+						else:
+							v.append(1)
+						x.append(np.asarray(v))
 						y = np.expand_dims(seq[i+n_i], axis=0)
-						#print(x[0][0].shape)
-						#print(x[0][1].shape)
-						#print(x[0][2].shape)
-						#print(x[0][3].shape)
-						#print(y.shape)
-						feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
-									self.model.x_ext: np.array(x[0][3]), 
+						#feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
+						#			self.model.x_ext: np.array(x[0][3]), 
+						#			self.model.y: np.array(y)}
+						feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]), self.model.x_t: np.array(x[2]), 
+									self.model.x_ext: np.array(x[3]), 
 									self.model.y: np.array(y)}
 						y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
 						seq_i[n_i+pre_index] = y_p
-						loss_i += l
+						t_loss += l
+						#loss_i += l
 					#y_pred_all.append(seq_i[pre_index:])
-					t_loss += loss_i
+					#t_loss += loss_i
 					i += 1
 				row, col, flow = np.array(seq).shape[1:]
 				print(row,col,flow)
