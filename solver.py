@@ -195,13 +195,18 @@ class ModelSolver(object):
 					if i%100 == 0:
 						print("test_1_to_n at i = "+str(i))
 					seq_i = seq[i-pre_index: i+n]
+					#print(seq_i.shape)
 					time_i = timestamps[i-pre_index: i+n]
 					#loss_i = 0
 					for n_i in range(n):
 						#x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
 						#					batch_size=1, close=close, period=period, trend=trend)
+						x = []
 						for d in range(len(depends)):
-							x.append(np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[1]), :, :, :],[0,3,1,2])), [1,2,0]))
+							x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
+							#print(x_d.shape)
+							x_d = np.expand_dims(x_d, axis=0)
+							x.append(x_d)
 						ext_i = time.strptime(time_i[n_i+pre_index][:8], '%Y%m%d').tm_wday
 						v = [0 for _ in range(7)]
 						v[ext_i] = 1
@@ -209,7 +214,9 @@ class ModelSolver(object):
 							v.append(0)
 						else:
 							v.append(1)
+						v = np.expand_dims(np.asarray(v), axis=0)
 						x.append(np.asarray(v))
+						#print(x[0].shape)
 						y = np.expand_dims(seq[i+n_i], axis=0)
 						#feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
 						#			self.model.x_ext: np.array(x[0][3]), 
