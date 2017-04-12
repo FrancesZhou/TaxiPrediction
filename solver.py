@@ -189,53 +189,54 @@ class ModelSolver(object):
 							[t*j for j in range(1, trend+1)] ]
 				#start_t = time.time()
 				t_loss = 0
-				i = pre_index
-				while i<pre_index+21:
-				#while i<len(seq)-n:
-					# seq_i : pre_index+n
-					if i%100 == 0:
-						print("test_1_to_n at i = "+str(i))
-					#seq_i = seq[i-pre_index: i+n]
-					seq_i = seq
-					#print(seq_i.shape)
-					time_i = timestamps[i-pre_index: i+n]
-					#loss_i = 0
-					for n_i in range(n):
-						#x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
-						#					batch_size=1, close=close, period=period, trend=trend)
-						x = []
-						for d in range(len(depends)):
-							#x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
-							x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+i-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
-							#print(x_d.shape)
-							x_d = np.expand_dims(x_d, axis=0)
-							x.append(x_d)
-						ext_i = time.strptime(time_i[n_i+i][:8], '%Y%m%d').tm_wday
-						v = [0 for _ in range(7)]
-						v[ext_i] = 1
-						if ext_i >= 5:
-							v.append(0)
-						else:
-							v.append(1)
-						v = np.expand_dims(np.asarray(v), axis=0)
-						x.append(np.asarray(v))
-						#print(x[0].shape)
-						y = np.expand_dims(seq[i+n_i], axis=0)
-						#feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
-						#			self.model.x_ext: np.array(x[0][3]), 
-						#			self.model.y: np.array(y)}
-						feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]), self.model.x_t: np.array(x[2]), 
-									self.model.x_ext: np.array(x[3]), 
-									self.model.y: np.array(y)}
-						y_p, _ = sess.run([y_, loss], feed_dict=feed_dict)
-						l = np.sum(np.square(y_p-y))
-						print(l)
-						seq_i[n_i+i] = y_p
-						t_loss += l
-						#loss_i += l
-					#y_pred_all.append(seq_i[pre_index:])
-					#t_loss += loss_i
-					i += 10
+				for loo in range(n):
+					i = pre_index+loo
+					#while i<pre_index+21:
+					while i<len(seq)-n:
+						# seq_i : pre_index+n
+						if i%100 == 0:
+							print("test_1_to_n at i = "+str(i))
+						#seq_i = seq[i-pre_index: i+n]
+						seq_i = seq
+						#print(seq_i.shape)
+						#time_i = timestamps[i-pre_index: i+n]
+						#loss_i = 0
+						for n_i in range(n):
+							#x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
+							#					batch_size=1, close=close, period=period, trend=trend)
+							x = []
+							for d in range(len(depends)):
+								#x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
+								x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+i-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
+								#print(x_d.shape)
+								x_d = np.expand_dims(x_d, axis=0)
+								x.append(x_d)
+							ext_i = time.strptime(timestamps[n_i+i][:8], '%Y%m%d').tm_wday
+							v = [0 for _ in range(7)]
+							v[ext_i] = 1
+							if ext_i >= 5:
+								v.append(0)
+							else:
+								v.append(1)
+							v = np.expand_dims(np.asarray(v), axis=0)
+							x.append(np.asarray(v))
+							#print(x[0].shape)
+							y = np.expand_dims(seq[i+n_i], axis=0)
+							#feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
+							#			self.model.x_ext: np.array(x[0][3]), 
+							#			self.model.y: np.array(y)}
+							feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]), self.model.x_t: np.array(x[2]), 
+										self.model.x_ext: np.array(x[3]), 
+										self.model.y: np.array(y)}
+							y_p, _ = sess.run([y_, loss], feed_dict=feed_dict)
+							l = np.sum(np.square(y_p-y))
+							print(l)
+							seq_i[n_i+i] = y_p
+							t_loss += l
+							#loss_i += l
+						#y_pred_all.append(seq_i[pre_index:])
+						#t_loss += loss_i
+						i += 10
 				row, col, flow = np.array(seq).shape[1:]
 				print(row,col,flow)
 				test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
