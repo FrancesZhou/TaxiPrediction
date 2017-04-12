@@ -166,6 +166,7 @@ class ModelSolver(object):
 			for t in range(len(y_test)):
 				#print(np.array(y_val[v]).shape)
 				t_count += np.prod(np.array(y_test[t]).shape)
+			print('t_count = '+str(t_count))
 			rmse = np.sqrt(t_loss/t_count)
 			#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
 			print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
@@ -193,6 +194,11 @@ class ModelSolver(object):
 						x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
 											batch_size=1, close=close, period=period, trend=trend)
 						y = np.expand_dims(seq[i+n_i], axis=0)
+						#print(x[0][0].shape)
+						#print(x[0][1].shape)
+						#print(x[0][2].shape)
+						#print(x[0][3].shape)
+						#print(y.shape)
 						feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]), 
 									self.model.x_ext: np.array(x[0][3]), 
 									self.model.y: np.array(y)}
