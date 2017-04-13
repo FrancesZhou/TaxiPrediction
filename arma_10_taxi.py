@@ -73,13 +73,18 @@ test_data = np.transpose(test_data)
 #         test_predict[i][j] = pre
 print('======================= ARMA for test ===============================')
 loss = 0
+error_count = 0
 for r in range(run_times):
     print('run '+str(r))
     i = np.random.randint(data.shape[0])
     j = np.random.randint(test_data.shape[-1]-output_steps)
     train_df = pd.DataFrame(data[i][j:split[0]+split[1]+j])
     train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+split[1]+j])
-    results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
+    try:
+        results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
+    except:
+        error_count += 1
+        continue
     pre, _, _ = results.forecast(output_steps)
     test_real = test_data[i][j:j+output_steps]
     loss += np.sum(np.square(pre - test_real))
@@ -92,6 +97,7 @@ print('================ calculate rmse for test data ============')
 #print('test loss is ' + str(n_rmse_test) + ' , ' + str(rmse_test))
 #print('val loss is ' + str(n_rmse_val))
 print('run times: '+str(run_times))
-rmse = np.sqrt(loss/(run_times*output_steps))
+print('error count: '+str(error_count))
+rmse = np.sqrt(loss/((run_times-error_count)*output_steps))
 print('test loss is ' + str(rmse))
 
