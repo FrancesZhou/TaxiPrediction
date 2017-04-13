@@ -23,6 +23,7 @@ from preprocessing import *
 
 input_steps = 10
 output_steps = 10
+run_times = 480
 #pre_process = MinMaxNormalization01()
 print('load train, validate, test data...')
 split = [43824, 8760, 8760]
@@ -47,40 +48,51 @@ test_data = np.transpose(test_data)
 
 #train_timestamps = timestamps[:split[0]]
 # validate and test data
-val_real = np.zeros((data.shape[0], val_data.shape[-1]-output_steps, output_steps))
-val_predict = np.zeros(val_real.shape)
-test_real = np.zeros((data.shape[0], test_data.shape[-1]-output_steps, output_steps))
-test_predict = np.zeros(test_real.shape)
+# val_real = np.zeros((data.shape[0], val_data.shape[-1]-output_steps, output_steps))
+# val_predict = np.zeros(val_real.shape)
+# test_real = np.zeros((data.shape[0], test_data.shape[-1]-output_steps, output_steps))
+# test_predict = np.zeros(test_real.shape)
 # ARMA for validate data
-print('======================== ARMA for validate ==========================')
-for i in range(data.shape[0]):
-    print('validate, i = '+str(i))
-    for j in range(val_data.shape[-1]-output_steps):
-        train_df = pd.DataFrame(data[i][j:split[0]+j])
-        train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+j])
-        results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
-        pre, _, _ = results.forecast(output_steps)
-        val_real[i][j] = val_data[i][j:j+output_steps]
-        val_predict[i][j] = pre
+# print('======================== ARMA for validate ==========================')
+# for i in range(data.shape[0]):
+#     print('validate, i = '+str(i))
+#     for j in range(val_data.shape[-1]-output_steps):
+#         train_df = pd.DataFrame(data[i][j:split[0]+j])
+#         train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+j])
+#         results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
+#         pre, _, _ = results.forecast(output_steps)
+#         val_real[i][j] = val_data[i][j:j+output_steps]
+#         val_predict[i][j] = pre
 # ARMA for test data
+# print('======================= ARMA for test ===============================')
+# for i in range(data.shape[0]):
+#     print('test, i = '+str(i))
+#     for j in range(test_data.shape[-1]-output_steps):
+#         train_df = pd.DataFrame(data[i][j:split[0]+split[1]+j])
+#         train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+split[1]+j])
+#         results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
+#         pre, _, _ = results.forecast(output_steps)
+#         test_real[i][j] = test_data[i][j:j+output_steps]
+#         test_predict[i][j] = pre
 print('======================= ARMA for test ===============================')
-for i in range(data.shape[0]):
-    print('test, i = '+str(i))
-    for j in range(test_data.shape[-1]-output_steps):
-        train_df = pd.DataFrame(data[i][j:split[0]+split[1]+j])
-        train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+split[1]+j])
-        results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
-        pre, _, _ = results.forecast(output_steps)
-        test_real[i][j] = test_data[i][j:j+output_steps]
-        test_predict[i][j] = pre
-
+loss = 0
+for r in range(run_times):
+    i = np.random.randint(data.shape[0])
+    j = np.random.randint(test_data.shape[-1]-output_steps)
+    train_df = pd.DataFrame(data[i][j:split[0]+split[1]+j])
+    train_df.index = pd.DatetimeIndex(timestamps[j:split[0]+split[1]+j])
+    results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
+    pre, _, _ = results.forecast(output_steps)
+    test_real = test_data[i][j:j+output_steps]
+    loss += np.sum(np.square(pre - test_real))
 print('================ calculate rmse for validate and test data ============')
-n_rmse_val = np.sqrt(np.sum(np.square(val_predict - val_real))*1.0/np.prod(val_real.shape))
-n_rmse_test = np.sqrt(np.sum(np.square(test_predict - test_real))*1.0/np.prod(test_real.shape))
+#n_rmse_val = np.sqrt(np.sum(np.square(val_predict - val_real))*1.0/np.prod(val_real.shape))
+#n_rmse_test = np.sqrt(np.sum(np.square(test_predict - test_real))*1.0/np.prod(test_real.shape))
 #rmse_val = pre_process.real_loss(n_rmse_val)
 #rmse_test = pre_process.real_loss(n_rmse_test)
 #print('val loss is ' + str(n_rmse_val) + ' , ' + str(rmse_val))
 #print('test loss is ' + str(n_rmse_test) + ' , ' + str(rmse_test))
-print('val loss is ' + str(n_rmse_val))
+#print('val loss is ' + str(n_rmse_val))
+rmse = np.sqrt(loss/(run_times*output_steps))
 print('test loss is ' + str(n_rmse_test))
 
