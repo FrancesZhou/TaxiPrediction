@@ -38,7 +38,7 @@ class ModelSolver(object):
 		if not os.path.exists(self.log_path):
 			os.makedirs(self.log_path)
 
-	def train(self, test_data, test_1_to_n_data=[]):
+	def train(self, test_data, test_1_to_n_data=[], output_steps=10):
 		raw_x = x = self.data['x']
 		raw_y = y = self.data['y']
 		x_val = self.val_data['x']
@@ -150,6 +150,7 @@ class ModelSolver(object):
 			x_test = test_data['x']
 			y_test = test_data['y']
 			t_loss = 0
+			y_pre_test = []
 			for i in range(len(y_test)):
 				if self.cpt_ext:
 					feed_dict = {self.model.x_c: np.array(x_test[i][0]), self.model.x_p: np.array(x_test[i][1]), self.model.x_t: np.array(x_test[i][2]), 
@@ -157,8 +158,9 @@ class ModelSolver(object):
 								self.model.y: np.array(y_test[i])}
 				else:
 					feed_dict = {self.model.x: x_test[i], self.model.y: y_test[i]}
-				_, l = sess.run([y_, loss], feed_dict=feed_dict)
+				y_pre_i, l = sess.run([y_, loss], feed_dict=feed_dict)
 				t_loss += l
+				y_pre_test.append(y_pre_i)
 
 			# y_val : [batches, batch_size, seq_length, row, col, channel]
 			print(np.array(y_test).shape)
@@ -169,7 +171,9 @@ class ModelSolver(object):
 			print('t_count = '+str(t_count))
 			rmse = np.sqrt(t_loss/t_count)
 			#rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
+			#y_pre_test = np.asarray(y_pre_test)
 			print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
+			y_pre_test_n = []
 			# ============================= for test 1_to_n ==============================
 			if self.cpt_ext:
 				print('test for next n steps...')
@@ -179,7 +183,7 @@ class ModelSolver(object):
 				p = 24
 				t = 24*7
 				pre_index = max(self.model.input_conf[0][0]*c, self.model.input_conf[1][0]*p, self.model.input_conf[2][0]*t)
-				n = 10
+				n = output_steps
 				close = self.model.input_conf[0][0]
 				period = self.model.input_conf[1][0]
 				trend = self.model.input_conf[2][0]
@@ -191,6 +195,7 @@ class ModelSolver(object):
 				t_loss = 0
 				# for loo in range(n):
 				i = pre_index
+				#y_pre_test_n = []
 				#while i<pre_index+3:
 				while i<len(seq)-n:
 					# seq_i : pre_index+n
@@ -200,7 +205,6 @@ class ModelSolver(object):
 					#seq_i = np.copy(seq)
 					#print(seq_i.shape)
 					time_i = timestamps[i-pre_index: i+n]
-					#loss_i = 0
 					for n_i in range(n):
 						#x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1], 
 						#					batch_size=1, close=close, period=period, trend=trend)
@@ -236,16 +240,18 @@ class ModelSolver(object):
 					#y_pred_all.append(seq_i[pre_index:])
 					#t_loss += loss_i
 					i += 1
+					y_pre_test_n.append(seq_i[pre_index:])
 				row, col, flow = np.array(seq).shape[1:]
 				print(row,col,flow)
 				test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
 				#test_count = ((len(seq)-pre_index-n)/n)*n*(row*col*flow)
 				print(test_count)
 				rmse = np.sqrt(t_loss/test_count)
+				#y_pre_test_n = np.asarray(y_pre_test_n)
 				print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
-				#print("elapsed time: ", time.time() - start_t)
-				# if save_outputs:
-				# 	np.save('test_n_outputs.npy',y_pred_all)
+			y_pre_test = np.asarray(y_pre_test)
+			y_pre_test_n = np.asarray(y_pre_test_n)
+			return y_pre_test, y_pre_test_n
 
 
 	def test(self, data, save_outputs=True):

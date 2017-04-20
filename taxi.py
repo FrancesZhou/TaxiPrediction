@@ -105,7 +105,16 @@ def main():
                 cross_val=False, cpt_ext=True)
         print('begin training...')
         test_n = {'data': test_data, 'timestamps': test_timestamps}
-        solver.train(test, test_n)
+        _, test_prediction = solver.train(test, test_n, output_steps=FLAGS.output_steps)
+        # get test_target and test_prediction
+        i = pre_index
+        test_target = []
+        while i<len(test_data)-FLAGS.output_steps:
+            test_target.append(test_data[i:i+FLAGS.output_steps])
+            i+=1
+        test_target = np.asarray(test_target)
+        #np.save('results/ResNet/test_target.npy', test_target)
+        #np.save('results/ResNet/test_prediction.npy', test_prediction)
         #print('begin testing for predicting next 1 step')
         #solver.test(test)
         # test 1 to n
@@ -187,9 +196,12 @@ def main():
                 pretrained_model=None, model_path='model_save/AttConvLSTM/', 
                 test_model='model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='log/AttConvLSTM/')
         print('begin training...')
-        solver.train(test)
-        print('test trained model...')
-        solver.test(test)
+        test_prediction, _ = solver.train(test)
+        test_target = np.asarray(test_y)
+        #print('test trained model...')
+        #solver.test(test)
+    np.save('results/'+FLAGS.model+'/test_target.npy', test_target)
+    np.save('results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()
