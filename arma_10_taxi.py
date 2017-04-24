@@ -74,6 +74,10 @@ test_data = np.transpose(test_data)
 print('======================= ARMA for test ===============================')
 loss = 0
 error_count = 0
+index_all = np.zeros([run_times, 2])
+error_index = np.zeros(run_times)
+test_target = np.zeros([run_times, output_steps])
+test_prediction = np.zeros([run_times, output_steps])
 for r in range(run_times):
     print('run '+str(r))
     i = np.random.randint(data.shape[0])
@@ -83,10 +87,14 @@ for r in range(run_times):
     try:
         results = ARMA(train_df, order=(2,2)).fit(trend='nc', disp=-1)
     except:
+        error_index[error_count] = r
         error_count += 1
         continue
     pre, _, _ = results.forecast(output_steps)
     test_real = test_data[i][j:j+output_steps]
+    index_all[r] = [i,j]
+    test_target[r] = test_real
+    test_prediction[r] = pre
     loss += np.sum(np.square(pre - test_real))
 print('================ calculate rmse for test data ============')
 #n_rmse_val = np.sqrt(np.sum(np.square(val_predict - val_real))*1.0/np.prod(val_real.shape))
@@ -100,4 +108,8 @@ print('run times: '+str(run_times))
 print('error count: '+str(error_count))
 rmse = np.sqrt(loss/((run_times-error_count)*output_steps))
 print('test loss is ' + str(rmse))
+np.save('taxi-results/ARMA/test_target.npy', test_target)
+np.save('taxi-results/ARMA/test_prediction.npy', test_prediction)
+np.save('taxi-results/ARMA/index_all.npy', index_all)
+np.save('taxi-results/ARMA/error_index.npy', error_index)
 
