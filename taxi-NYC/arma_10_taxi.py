@@ -16,8 +16,8 @@ sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
 # for server running
 sys.path.append('/home/zx/TaxiPrediction/model/')
-sys.path.append('./util/')
-sys.path.append('./data/')
+sys.path.append('../util/')
+sys.path.append('../data/')
 from utils import *
 from preprocessing import *
 
@@ -26,7 +26,7 @@ output_steps = 10
 run_times = 1000
 print('load train, validate, test data...')
 split = [43824, 8760, 8760]
-data, train_data, val_data, test_data = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=split)
+data, train_data, val_data, test_data = load_data(filename=['../data/taxi/p_map.mat', '../data/taxi/d_map.mat'], split=split)
 # data: [num, row, col, channel]
 print('preprocess train data...')
 all_timestamps_string = gen_timestamps(['2009','2010','2011','2012','2013','2014','2015'], gen_timestamps_for_year=gen_timestamps_for_year_ymdh)
@@ -108,8 +108,8 @@ print('run times: '+str(run_times))
 print('error count: '+str(error_count))
 rmse = np.sqrt(loss/((run_times-error_count)*output_steps))
 print('test loss is ' + str(rmse))
-np.save('taxi-results/ARMA/test_target.npy', test_target)
-np.save('taxi-results/ARMA/test_prediction.npy', test_prediction)
-np.save('taxi-results/ARMA/index_all.npy', index_all)
-np.save('taxi-results/ARMA/error_index.npy', error_index)
+np.save('../taxi-results/results/ARMA/test_target.npy', test_target)
+np.save('../taxi-results/results/ARMA/test_prediction.npy', test_prediction)
+np.save('../taxi-results/results/ARMA/index_all.npy', index_all)
+np.save('../taxi-results/results/ARMA/error_index.npy', error_index)
 

@@ -15,8 +15,8 @@ sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
 # for server running
 sys.path.append('/home/zx/TaxiPrediction/model/')
-sys.path.append('./util/')
-sys.path.append('./data/')
+sys.path.append('../util/')
+sys.path.append('../data/')
 from utils import *
 from preprocessing import *
 
@@ -25,7 +25,7 @@ output_steps = 10
 pre_process = MinMaxNormalization01()
 print('load train, validate, test data...')
 split = [43824, 8760, 8760]
-data, train_data, val_data, test_data = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=split)
+data, train_data, val_data, test_data = load_data(filename=['../data/taxi/p_map.mat', '../data/taxi/d_map.mat'], split=split)
 # data: [num, row, col, channel]
 print('preprocess train data...')
 pre_process.fit(train_data)
@@ -63,10 +63,10 @@ test_real = []
 test_predict = []
 for i in range(val_data.shape[0]-output_steps):
     val_real.append(val_data[i: i+output_steps])
-    val_predict.append(results.forecast(val_data_preindex[i:i+lag_order], 10))
+    val_predict.append(results.forecast(val_data_preindex[i:i+lag_order], output_steps))
 for i in range(test_data.shape[0]-output_steps):
     test_real.append(test_data[i: i+output_steps])
-    test_predict.append(results.forecast(test_data_preindex[i:i+lag_order], 10))
+    test_predict.append(results.forecast(test_data_preindex[i:i+lag_order], output_steps))
 val_real = np.array(val_real)
 val_predict = np.array(val_predict)
 test_real = np.array(test_real)
@@ -78,4 +78,5 @@ rmse_val = pre_process.real_loss(n_rmse_val)
 rmse_test = pre_process.real_loss(n_rmse_test)
 print('val loss is ' + str(n_rmse_val) + ' , ' + str(rmse_val))
 print('test loss is ' + str(n_rmse_test) + ' , ' + str(rmse_test))
-
+np.save('../taxi-results/results/VAR/test_target.npy', test_real)
+np.save('../taxi-results/results/VAR/test_prediction.npy', test_predict)

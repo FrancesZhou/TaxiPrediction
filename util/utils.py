@@ -13,7 +13,16 @@ def load_data(filename, split):
 	train = data[0:split[0],:,:,:]
 	validate = data[split[0]:split[0]+split[1],:,:,:]
 	test = data[split[0]+split[1]:split[0]+split[1]+split[2],:,:,:]
-	
+	return data, train, validate, test
+
+def load_npy_data(filename, split):
+	if len(filename)==2:
+		d1 = np.load(filename[0])
+		d2 = np.load(filename[1])
+		data = np.concatenate((d1[:,:,:,np.newaxis], d2[:,:,:,np.newaxis]), axis=3)
+	train = data[0:split[0],:,:,:]
+	validate = data[split[0]:split[0]+split[1],:,:,:]
+	test = data[split[0]+split[1]:split[0]+split[1]+split[2],:,:,:]
 	return data, train, validate, test
 
 def load_h5data(fname):
@@ -130,7 +139,7 @@ def gen_timestamps_for_year(year):
 	day1 = ['0'+str(e) for e in range(1,10)]
 	day2 = [str(e) for e in range(10,32)]
 	day = day1+day2
-	if year=='2012':
+	if year=='2012' or year=='2016':
 		day_sum = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 	else:
 		day_sum = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -157,7 +166,7 @@ def gen_timestamps_for_year_ymdh(year):
 	day1 = ['0'+str(e) for e in range(1,10)]
 	day2 = [str(e) for e in range(10,32)]
 	day = day1+day2
-	if year=='2012':
+	if year=='2012' or year=='2016':
 		day_sum = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 	else:
 		day_sum = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]

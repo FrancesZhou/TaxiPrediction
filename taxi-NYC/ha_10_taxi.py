@@ -6,8 +6,8 @@ sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
 # for server running
 sys.path.append('/home/zx/TaxiPrediction/model/')
-sys.path.append('./util/')
-sys.path.append('./data/')
+sys.path.append('../util/')
+sys.path.append('../data/')
 from utils import *
 from preprocessing import *
 
@@ -15,7 +15,7 @@ input_steps = 10
 output_steps = 10
 print('load train, validate, test data...')
 split = [43824, 8760, 8760]
-data, train_data, val_data, test_data = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=split)
+data, train_data, val_data, test_data = load_data(filename=['../data/taxi/p_map.mat', '../data/taxi/d_map.mat'], split=split)
 
 s = data.shape
 p = 24*7
@@ -54,4 +54,5 @@ n_rmse_test = np.sqrt(np.sum(np.square(test_predict - test_real))*1.0/np.prod(te
 #print('test loss is ' + str(n_rmse_test) + ' , ' + str(rmse_test))
 print('val loss is ' + str(n_rmse_val))
 print('test loss is ' + str(n_rmse_test))
-
+np.save('../taxi-results/results/HA/test_target.npy', test_real)
+np.save('../taxi-results/results/HA/test_prediction.npy', test_predict)
