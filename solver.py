@@ -197,7 +197,7 @@ class ModelSolver(object):
 				i = pre_index
 				#y_pre_test_n = []
 				#while i<pre_index+3:
-				y_pre_test_n = np.zeros([len(seq)-n-pre_index, n])
+				y_pre_test_n = np.zeros([len(seq)-n-pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3], self.model.input_conf[0][1]])
 				while i<len(seq)-n:
 					# seq_i : pre_index+n
 					if i%100 == 0:
@@ -240,8 +240,8 @@ class ModelSolver(object):
 						t_loss += l
 					#y_pred_all.append(seq_i[pre_index:])
 					#t_loss += loss_i
-					i += 1
 					y_pre_test_n[i-pre_index] = seq_i[pre_index:]
+					i += 1
 					#y_pre_test_n.append(seq_i[pre_index:])
 				row, col, flow = np.array(seq).shape[1:]
 				print(row,col,flow)
