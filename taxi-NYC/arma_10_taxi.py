@@ -23,7 +23,7 @@ from preprocessing import *
 
 input_steps = 10
 output_steps = 10
-run_times = 1000
+run_times = 2000
 print('load train, validate, test data...')
 split = [43824, 8760, 8760]
 data, train_data, val_data, test_data = load_data(filename=['../data/taxi/p_map.mat', '../data/taxi/d_map.mat'], split=split)
