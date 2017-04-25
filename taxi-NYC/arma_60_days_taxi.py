@@ -51,6 +51,7 @@ test_target = np.zeros([run_times, output_steps])
 test_prediction = np.zeros([run_times, output_steps])
 index_all[0:720] = range(2184,2904)
 index_all[720:] = range(5856,6576)
+index_all = np.asarray(index_all,dtype=int)
 for r in range(run_times):
     j = index_all[r]
     print('run '+str(r))
