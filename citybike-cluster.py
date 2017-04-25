@@ -35,7 +35,7 @@ tf.app.flags.DEFINE_string('update_rule', 'adam',
 tf.app.flags.DEFINE_integer('save_every', 1,
                             """steps to save""")
 # model: ConvLSTM, AttConvLSTM, ResNet
-tf.app.flags.DEFINE_string('model', 'ResNet',
+tf.app.flags.DEFINE_string('model', 'AttConvLSTM',
                             """which model to train and test""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,
@@ -202,7 +202,7 @@ def main():
         #print('test trained model...')
         #solver.test(test)
     #np.save('citybike-cluster-results/results/'+FLAGS.model+'_'+str(FLAGS.cluster_num)+'/test_target.npy', test_target)
-    np.save('citybike-cluster-results/results/'+FLAGS.model+'_'+str(FLAGS.cluster_num)+'/test_prediction.npy', test_prediction)
+    np.save('citybike-cluster-results/results/'+FLAGS.model+'/cluster_'+str(FLAGS.cluster_num)+'_test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()
