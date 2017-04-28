@@ -100,8 +100,8 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='taxi-results/model_save/ResNet/', 
-                test_model='taxi-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='taxi-results/log/ResNet/', 
+                pretrained_model=None, model_path='taxi-cluster-results/model_save/ResNet/', 
+                test_model='taxi-cluster-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='taxi-cluster-results/log/ResNet/', 
                 cross_val=False, cpt_ext=True)
         print('begin training...')
         test_n = {'data': test_data, 'timestamps': test_timestamps}
@@ -155,15 +155,15 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='taxi-results/model_save/ConvLSTM/', 
-                test_model='taxi-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-results/log/ConvLSTM/')
+                pretrained_model=None, model_path='taxi-cluster-results/model_save/ConvLSTM/', 
+                test_model='taxi-cluster-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-cluster-results/log/ConvLSTM/')
         elif FLAGS.model=='AttConvLSTM':
             # k-means to cluster train_data
             # train_data: [num, row, col, channel]
             print('k-means to cluster...')
             vector_data = np.reshape(train_data, (train_data.shape[0], -1))
             #init_vectors = vector_data[:FLAGS.cluster_num, :]
-    	    #cluster_centroid = init_vectors
+            #cluster_centroid = init_vectors
             kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
             cluster_centroid = kmeans.cluster_centers_
             # reshape to [cluster_num, row, col, channel]
@@ -193,14 +193,14 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='taxi-results/model_save/AttConvLSTM/', 
-                test_model='taxi-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-results/log/AttConvLSTM/')
+                pretrained_model=None, model_path='taxi-cluster-results/model_save/AttConvLSTM/', 
+                test_model='taxi-cluster-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-cluster-results/log/AttConvLSTM/')
         print('begin training...')
         test_prediction, _ = solver.train(test)
         test_target = np.asarray(test_y)
         #print('test trained model...')
         #solver.test(test)
-    np.save('taxi-results/results/'+FLAGS.model+'/test_target.npy', test_target)
+    #np.save('taxi-results/results/'+FLAGS.model+'/test_target.npy', test_target)
     np.save('taxi-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
