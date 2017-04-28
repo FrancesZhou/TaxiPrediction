@@ -201,7 +201,7 @@ def main():
         #print('test trained model...')
         #solver.test(test)
     #np.save('taxi-results/results/'+FLAGS.model+'/test_target.npy', test_target)
-    np.save('taxi-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
+    np.save('taxi-cluster-results/results/'+FLAGS.model+'/cluster_'+str(FLAGS.cluster_num)+'_test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()
