@@ -35,7 +35,7 @@ tf.app.flags.DEFINE_string('update_rule', 'adam',
 tf.app.flags.DEFINE_integer('save_every', 1,
                             """steps to save""")
 # model: ConvLSTM, AttConvLSTM, ResNet
-tf.app.flags.DEFINE_string('model', 'ResNet',
+tf.app.flags.DEFINE_string('model', 'AttConvLSTM',
                             """which model to train and test""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,

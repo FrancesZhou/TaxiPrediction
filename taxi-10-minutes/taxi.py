@@ -2,14 +2,17 @@ import numpy as np
 import tensorflow as tf
 import sys
 from sklearn.cluster import KMeans
-from solver import ModelSolver
+#from solver import ModelSolver
 # for mac debug
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
 # for server running
 sys.path.append('/home/zx/TaxiPrediction/model/')
+sys.path.append('/home/zx/TaxiPrediction/')
 sys.path.append('../util/')
 sys.path.append('../data/')
+#from solver import ModelSover
+from solver import *
 from ConvLSTM import *
 from AttConvLSTM import *
 from ResNet import *
@@ -57,7 +60,7 @@ def main():
     pre_process = MinMaxNormalization01()
     print('load train, validate, test data...')
     split = [34992, 8784, 8784]
-    data, train_data, val_data, test_data = load_data(filename=['data/taxi_10_minutes/p_map.mat', 'data/taxi_10_minutes/d_map.mat'], split=split)
+    data, train_data, val_data, test_data = load_data(filename=['../data/taxi_10_minutes/p_map.mat', '../data/taxi_10_minutes/d_map.mat'], split=split)
     # data: [num, row, col, channel]
     print('preprocess train data...')
     pre_process.fit(train_data)
