@@ -29,7 +29,7 @@ split = [17424, 4464, 4320]
 data, train_data, val_data, test_data = load_npy_data(filename=['../data/citybike_10_minutes/p_map.npy', '../data/citybike_10_minutes/d_map.npy'], split=split)
 # data: [num, row, col, channel]
 print('preprocess train data...')
-all_timestamps_string = gen_timestamps('2016', gen_timestamps_for_year=gen_timestamps_for_year_ymdhm)
+all_timestamps_string = gen_timestamps(['2016'], gen_timestamps_for_year=gen_timestamps_for_year_ymdhm)
 all_timestamps_string = all_timestamps_string[:-4416]
 all_timestamps_struct = [time.strptime(t, '%Y%m%d%H%M') for t in all_timestamps_string]
 timestamps = [datetime.fromtimestamp(mktime(t)) for t in all_timestamps_struct]

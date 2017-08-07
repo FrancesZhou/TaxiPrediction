@@ -1,11 +1,13 @@
+import sys
 import numpy as np
 import tensorflow as tf
 from sklearn.cluster import KMeans
-from solver import ModelSolver
+#from solver import ModelSolver
 #from ConvLSTM import ConvLSTM
 #from AttConvLSTM import AttConvLSTM
-from utils import load_data, batch_data
-from preprocessing import MinMaxNormalization01, MinMaxNormalization_neg_1_pos_1
+sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+from utils import *
+from preprocessing import *
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -47,7 +49,7 @@ def main():
     # load train dataset
     pre_process = MinMaxNormalization01()
     print('load train, validate, test data...')
-    train_data, val_data, _ = load_data(filename=['data/p_map.mat', 'data/d_map.mat'], split=[43824, 8760, 8760])
+    data, train_data, _, _ = load_data(filename=['../data/taxi/p_map.mat', '../data/taxi/d_map.mat'], split=[43824, 8760, 8760])
     print('preprocess train data...')
     train_data = pre_process.fit_transform(train_data)
     # data: [num, row, col, channel]
@@ -72,15 +74,15 @@ def main():
         vector_data = np.reshape(train_data, (train_data.shape[0], -1))
         print('shape of vector_data: ', vector_data.shape)
         #init_vectors = vector_data[:FLAGS.cluster_num, :]
-        kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=10, tol=0.00000001).fit(vector_data)
+        kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=5, tol=0.00000001).fit(vector_data)
         labels = kmeans.labels_
         cluster_centroid = kmeans.cluster_centers_
         print('cluster centroid shape: ', cluster_centroid.shape)
-        for i in range(FLAGS.cluster_num):
-            print('label %d : %d', i, labels[i])
+        # for i in range(FLAGS.cluster_num):
+        #     print('label %d : %d', i, labels[i])
         print('inertia is: ', kmeans.inertia_)
         # build model
-        print('build AttConvLSTM model...')
+        # print('build AttConvLSTM model...')
 
 if __name__ == "__main__":
     main()
