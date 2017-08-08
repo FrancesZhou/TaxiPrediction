@@ -10,6 +10,7 @@ from scipy.spatial.distance import cdist
 #from ConvLSTM import ConvLSTM
 #from AttConvLSTM import AttConvLSTM
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
+sys.path.append('/home/zx/TaxiPrediction/util/')
 from utils import *
 from preprocessing import *
 
@@ -79,6 +80,7 @@ def main():
     for k in K:
         # k-means to cluster train_data
         # train_data: [num, row, col, channel]
+	print '=============== k : '+str(k)
         print('k-means to cluster...')
         vector_data = np.reshape(train_data, (train_data.shape[0], -1))
         print('shape of vector_data: ', vector_data.shape)
