@@ -55,30 +55,30 @@ class AttConvLSTM2(object):
 		self.y = tf.placeholder(tf.float32, [None, self.output_steps, self.input_row, self.input_col, self.input_channel])
 		self.is_training = tf.placeholder(tf.bool)
 
-	def norm(self, inputs, is_training):
-		#with tf.variable_scope(scope_name) as scope:
-		mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
-		scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
-		offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
-		epsilon = 0.001
-		# apply moving average for mean and var when training on batch
-		ema = tf.train.ExponentialMovingAverage(decay=0.5)
-		def mean_var_with_update():
-			ema_apply_op = ema.apply([mean, var])
-			with tf.control_dependencies([ema_apply_op]):
-				return tf.identity(mean), tf.identity(var)
-		#mean, var = mean_var_with_update()
-		mean, var = tf.cond(is_training,
-            				mean_var_with_update,
-            				lambda:(
-            					ema.average(mean),
-            					ema.average(var)
-            					)
-            				)
-		return tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
+	def norm(self, inputs, reuse, is_training):
+		with tf.variable_scope('batch_normalization', reuse=reuse):
+			mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
+			scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
+			offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
+			epsilon = 0.001
+			# apply moving average for mean and var when training on batch
+			ema = tf.train.ExponentialMovingAverage(decay=0.5)
+			def mean_var_with_update():
+				ema_apply_op = ema.apply([mean, var])
+				with tf.control_dependencies([ema_apply_op]):
+					return tf.identity(mean), tf.identity(var)
+			#mean, var = mean_var_with_update()
+			mean, var = tf.cond(is_training,
+	            				mean_var_with_update,
+	            				lambda:(
+	            					ema.average(mean),
+	            					ema.average(var)
+	            					)
+	            				)
+			return tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
 
 
-	def conv(self, inputs, filter, strides, output_features, padding, idx, is_training):
+	def conv(self, inputs, filter, strides, output_features, padding, idx, reuse, is_training):
 		# param: filter, strides, output_features
 		with tf.variable_scope('conv_{0}'.format(idx)) as scope:
 			in_channels = inputs.get_shape().as_list()[3]
@@ -87,12 +87,12 @@ class AttConvLSTM2(object):
 			y = tf.nn.conv2d(inputs, w, strides=strides, padding=padding)
 			y_b = tf.nn.bias_add(y, b, name='wx_plus_b')
 			# BN
-			y_b = self.norm(y_b,  is_training)
+			y_b = self.norm(y_b, reuse, is_training)
 			y_relu = tf.nn.relu(y_b, name='out_conv_{0}'.format(idx))
 			return y_relu
 
 	#def conv_lstm():
-	def conv_transpose(self, inputs, filter, strides, output_features, padding, idx, is_training):
+	def conv_transpose(self, inputs, filter, strides, output_features, padding, idx, reuse, is_training):
 		with tf.variable_scope('conv_transpose_{0}'.format(idx)) as scope:
 			in_channels = inputs.get_shape().as_list()[3]
 			w = tf.get_variable('w', [filter[0], filter[1], output_features, in_channels], initializer=self.weight_initializer)
@@ -101,7 +101,7 @@ class AttConvLSTM2(object):
 			y = tf.nn.conv2d_transpose(inputs, w, output_shape, strides=strides, padding=padding)
 			y_b = tf.nn.bias_add(y, b, name='wx_plus_b')
 			# BN
-			y_b = self.norm(y_b, is_training)
+			y_b = self.norm(y_b, reuse, is_training)
 			y_relu = tf.nn.relu(y_b, name='out_conv_transpose_{0}'.format(idx))
 			return y_relu
 
@@ -116,7 +116,7 @@ class AttConvLSTM2(object):
 			conv_lstm_index = 0;
 			for i in range(len(layer)):
 				if layer[i]=='conv':
-					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, is_training=is_training)
+					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, reuse=reuse, is_training=is_training)
 				if layer[i]=='conv_lstm':
 					y, state[conv_lstm_index] = self.encoder_conv_lstm[conv_lstm_index](y, state[conv_lstm_index], scope='conv_lstm_{0}'.format(i))
 					conv_lstm_index += 1
@@ -131,7 +131,7 @@ class AttConvLSTM2(object):
 		with tf.variable_scope('attention', reuse=reuse):
 			for i in range(len(layer)):
 				if layer[i]=='conv':
-					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, is_training=is_training)
+					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, reuse=reuse, is_training=is_training)
 			# attention and hidden state
 			# y: [cluster_num, 16, 16, 16]
 			# att: [cluster_num, att_num]
@@ -185,7 +185,7 @@ class AttConvLSTM2(object):
 			conv_lstm_index = 0;
 			for i in range(len(layer)):
 				if layer[i]=='conv':
-					y = self.conv_transpose(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, is_training=is_training)
+					y = self.conv_transpose(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, reuse=reuse, is_training=is_training)
 				if layer[i]=='conv_lstm':
 					# add attention mechanism
 					y, state[conv_lstm_index] = self.decoder_conv_lstm[conv_lstm_index](y, state[conv_lstm_index], scope='conv_lstm_{0}'.format(i))
