@@ -105,13 +105,13 @@ class AttConvLSTM2(object):
 			y_relu = tf.nn.relu(y_b, name='out_conv_transpose_{0}'.format(idx))
 			return y_relu
 
-	def encoder(self, x, last_state, is_training=True):
+	def encoder(self, x, last_state, reuse=True, is_training=True):
 		layer = self.encoder_layer
 		param = self.encoder_layer_param
 		y = x
 		#state = self.encoder_state
 		state = last_state
-		with tf.variable_scope('encoder'):
+		with tf.variable_scope('encoder', reuse=True):
 			# layer: ['conv', 'conv_lstm']
 			conv_lstm_index = 0;
 			for i in range(len(layer)):
@@ -122,13 +122,13 @@ class AttConvLSTM2(object):
 					conv_lstm_index += 1
 		return y, state
 
-	def attention_layer(self, state, is_training=True):
+	def attention_layer(self, state, reuse=True, is_training=True):
 		layer = self.att_layer
 		param = self.att_layer_param
 		# att_inputs: [cluster_num, row, col, channel]
 		y = tf.convert_to_tensor(self.att_inputs, dtype=tf.float32)
 		#h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
-		with tf.variable_scope('attention'):
+		with tf.variable_scope('attention', reuse=True):
 			for i in range(len(layer)):
 				if layer[i]=='conv':
 					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, is_training=is_training)
@@ -173,7 +173,7 @@ class AttConvLSTM2(object):
 				att_context = tf.reshape(context, out_shape)
 				return att_context, alpha
 
-	def decoder(self, init_state, is_training=True):
+	def decoder(self, init_state, reuse=True, is_training=True):
 		layer = self.decoder_layer
 		param = self.decoder_layer_param
 		#y = None
@@ -203,11 +203,11 @@ class AttConvLSTM2(object):
 		# encoder 
 		state = self.encoder_state
 		for t in range(self.input_steps):
-			_, state = self.encoder(x[:, t, :, :, :], state, is_training=is_training)
+			_, state = self.encoder(x[:, t, :, :, :], state, reuse=(t!=0), is_training=is_training)
 		state_2 = state
 		y_ = []
 		for t in range(self.output_steps):
-			out, state_2 = self.decoder(state_2, is_training=is_training)
+			out, state_2 = self.decoder(state_2, reuse=(t!=0), is_training=is_training)
 			y_.append(out)
 		y_ = tf.stack(y_)
 		y_ = tf.transpose(y_, [1,0,2,3,4])
