@@ -16,6 +16,9 @@ from ResNet import *
 from preprocessing import *
 from utils import *
 
+from AttConvLSTM2 import *
+from solver2 import *
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer('input_steps', 10,

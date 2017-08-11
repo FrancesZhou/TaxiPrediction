@@ -57,25 +57,25 @@ class AttConvLSTM2(object):
 
 	def norm(self, inputs, is_training):
 		#with tf.variable_scope(scope_name) as scope:
-			mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
-			scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
-			offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
-			epsilon = 0.001
-			# apply moving average for mean and var when training on batch
-			ema = tf.train.ExponentialMovingAverage(decay=0.5)
-			def mean_var_with_update():
-				ema_apply_op = ema.apply([mean, var])
-                with tf.control_dependencies([ema_apply_op]):
-                	return tf.identity(mean), tf.identity(var)
-            #mean, var = mean_var_with_update()
-            mean, var = tf.cond(is_training,
-            					mean_var_with_update,
-            					lambda:(
-            						ema.average(mean),
-            						ema.average(var)
-            						)
+		mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
+		scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
+		offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
+		epsilon = 0.001
+		# apply moving average for mean and var when training on batch
+		ema = tf.train.ExponentialMovingAverage(decay=0.5)
+		def mean_var_with_update():
+			ema_apply_op = ema.apply([mean, var])
+			with tf.control_dependencies([ema_apply_op]):
+				return tf.identity(mean), tf.identity(var)
+		#mean, var = mean_var_with_update()
+		mean, var = tf.cond(is_training,
+            				mean_var_with_update,
+            				lambda:(
+            					ema.average(mean),
+            					ema.average(var)
             					)
-            inputs = tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
+            				)
+		return tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
 
 
 	def conv(self, inputs, filter, strides, output_features, padding, idx, is_training):
