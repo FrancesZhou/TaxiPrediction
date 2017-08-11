@@ -111,7 +111,7 @@ class AttConvLSTM2(object):
 		y = x
 		#state = self.encoder_state
 		state = last_state
-		with tf.variable_scope('encoder', reuse=True):
+		with tf.variable_scope('encoder', reuse=reuse):
 			# layer: ['conv', 'conv_lstm']
 			conv_lstm_index = 0;
 			for i in range(len(layer)):
@@ -128,7 +128,7 @@ class AttConvLSTM2(object):
 		# att_inputs: [cluster_num, row, col, channel]
 		y = tf.convert_to_tensor(self.att_inputs, dtype=tf.float32)
 		#h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
-		with tf.variable_scope('attention', reuse=True):
+		with tf.variable_scope('attention', reuse=reuse):
 			for i in range(len(layer)):
 				if layer[i]=='conv':
 					y = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, is_training=is_training)
