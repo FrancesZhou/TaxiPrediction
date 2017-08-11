@@ -55,27 +55,27 @@ class AttConvLSTM2(object):
 		self.y = tf.placeholder(tf.float32, [None, self.output_steps, self.input_row, self.input_col, self.input_channel])
 		self.is_training = tf.placeholder(tf.bool)
 
-	def norm(self, inputs, reuse, is_training):
-		with tf.variable_scope('batch_normalization', reuse=reuse):
-			mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
-			scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
-			offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
-			epsilon = 0.001
-			# apply moving average for mean and var when training on batch
-			ema = tf.train.ExponentialMovingAverage(decay=0.5)
-			def mean_var_with_update():
-				ema_apply_op = ema.apply([mean, var])
-				with tf.control_dependencies([ema_apply_op]):
-					return tf.identity(mean), tf.identity(var)
-			#mean, var = mean_var_with_update()
-			mean, var = tf.cond(is_training,
-	            				mean_var_with_update,
-	            				lambda:(
-	            					ema.average(mean),
-	            					ema.average(var)
-	            					)
-	            				)
-			return tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
+	# def norm(self, inputs, reuse, is_training):
+	# 	with tf.variable_scope('batch_normalization', reuse=reuse):
+	# 		mean, var = tf.nn.moments(inputs, axes=list(range(len(inputs.get_shape()) - 1)))
+	# 		scale = tf.Variable(tf.ones([inputs.get_shape().as_list()[-1]]))
+	# 		offset = tf.Variable(tf.zeros([inputs.get_shape().as_list()[-1]]))
+	# 		epsilon = 0.001
+	# 		# apply moving average for mean and var when training on batch
+	# 		ema = tf.train.ExponentialMovingAverage(decay=0.5)
+	# 		def mean_var_with_update():
+	# 			ema_apply_op = ema.apply([mean, var])
+	# 			with tf.control_dependencies([ema_apply_op]):
+	# 				return tf.identity(mean), tf.identity(var)
+	# 		#mean, var = mean_var_with_update()
+	# 		mean, var = tf.cond(is_training,
+	#             				mean_var_with_update,
+	#             				lambda:(
+	#             					ema.average(mean),
+	#             					ema.average(var)
+	#             					)
+	#             				)
+	# 		return tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
 
 
 	def conv(self, inputs, filter, strides, output_features, padding, idx, reuse, is_training):
@@ -87,7 +87,8 @@ class AttConvLSTM2(object):
 			y = tf.nn.conv2d(inputs, w, strides=strides, padding=padding)
 			y_b = tf.nn.bias_add(y, b, name='wx_plus_b')
 			# BN
-			y_b = self.norm(y_b, reuse, is_training)
+			#y_b = self.norm(y_b, reuse, is_training)
+			y_b = tf.layers.batch_normalization(y_b, training=is_training)
 			y_relu = tf.nn.relu(y_b, name='out_conv_{0}'.format(idx))
 			return y_relu
 
@@ -101,7 +102,8 @@ class AttConvLSTM2(object):
 			y = tf.nn.conv2d_transpose(inputs, w, output_shape, strides=strides, padding=padding)
 			y_b = tf.nn.bias_add(y, b, name='wx_plus_b')
 			# BN
-			y_b = self.norm(y_b, reuse, is_training)
+			#y_b = self.norm(y_b, reuse, is_training)
+			y_b = tf.layers.batch_normalization(y_b, training=is_training)
 			y_relu = tf.nn.relu(y_b, name='out_conv_transpose_{0}'.format(idx))
 			return y_relu
 
