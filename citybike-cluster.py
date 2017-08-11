@@ -196,6 +196,44 @@ def main():
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
                 pretrained_model=None, model_path='citybike-cluster-results/model_save/AttConvLSTM/', 
                 test_model='citybike-cluster-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-cluster-results/log/AttConvLSTM/')
+        elif FLAGS.model=='AttConvLSTM2':
+            # k-means to cluster train_data
+            # train_data: [num, row, col, channel]
+            print('k-means to cluster...')
+            vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+            #init_vectors = vector_data[:FLAGS.cluster_num, :]
+            #cluster_centroid = init_vectors
+            kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
+            cluster_centroid = kmeans.cluster_centers_
+            # reshape to [cluster_num, row, col, channel]
+            cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+            # build model
+            print('build AttConvLSTM2 model...')
+            model = AttConvLSTM2(input_dim=input_dim, 
+                att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes, 
+                batch_size=FLAGS.batch_size, 
+                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
+                'decoder': ['conv_lstm', 'conv_lstm', 'conv', 'conv'],
+                'attention': ['conv', 'conv']}, 
+                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 16], 
+                [[16,16], [3,3], 64], 
+                [[16,16], [3,3], 64] ],
+                'decoder': [ [[16,16], [3,3], 64], 
+                [[16,16], [3,3], 64], 
+                [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 2] ],
+                'attention': [ [[3,3], [1,1,1,1], 8], 
+                [[3,3], [1,1,1,1], 16] ]}, 
+                input_steps=10, output_steps=10)
+            print('model solver...')
+            solver = ModelSolver2(model, train, val, preprocessing=pre_process,
+                n_epochs=FLAGS.n_epochs, 
+                batch_size=FLAGS.batch_size, 
+                update_rule=FLAGS.update_rule,
+                learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
+                pretrained_model=None, model_path='citybike-cluster-results/model_save/AttConvLSTM2/', 
+                test_model='citybike-cluster-results/model_save/AttConvLSTM2/model-'+str(FLAGS.n_epochs), log_path='citybike-cluster-results/log/AttConvLSTM2/')
         print('begin training...')
         test_prediction, _ = solver.train(test)
         test_target = np.asarray(test_y)
