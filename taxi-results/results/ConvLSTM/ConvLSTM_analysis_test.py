@@ -13,8 +13,8 @@ output_steps = 10
 # tar1 = np.reshape(np.transpose(tar,(2,0,1,3,4,5)), (output_steps, -1))
 # pre1 = np.reshape(np.transpose(pre,(2,0,1,3,4,5)), (output_steps, -1))
 shape_tar = tar.shape
-tar = np.reshape(tar, (shape_tar[0]*shape_tar[1], shape_tar[2], shape_tar[3], shape_tar[4], shape_tar[5]))[:2184]
-pre = np.reshape(pre, (shape_tar[0]*shape_tar[1], shape_tar[2], shape_tar[3], shape_tar[4], shape_tar[5]))[:2184]
+tar = np.reshape(tar, (shape_tar[0]*shape_tar[1], shape_tar[2], shape_tar[3], shape_tar[4], shape_tar[5]))[:4344]
+pre = np.reshape(pre, (shape_tar[0]*shape_tar[1], shape_tar[2], shape_tar[3], shape_tar[4], shape_tar[5]))[:4344]
 tar1 = np.reshape(np.transpose(tar,(1,0,2,3,4)), (output_steps, -1))
 pre1 = np.reshape(np.transpose(pre,(1,0,2,3,4)), (output_steps, -1))
 

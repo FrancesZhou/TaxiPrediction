@@ -1,8 +1,8 @@
 import numpy as np
 
-methods = ['HA', 'ARMA_10', 'VAR', 'ResNet', 'ConvLSTM', 'AttConvLSTM']
+methods = ['HA', 'ARMA', 'VAR', 'ResNet', 'ConvLSTM', 'AttConvLSTM']
 
-for i in range(len(methods)):
+for i in range(1,len(methods)):
 	print methods[i]
 	tar_file = methods[i]+'/test_target.npy'
 	#print tar_file
