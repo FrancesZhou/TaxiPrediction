@@ -1,8 +1,8 @@
 import numpy as np
 
 
-tar = np.load('test_target.npy')[:4344]
-pre = np.load('test_prediction.npy')[:4344]
+tar = np.load('test_target.npy')
+pre = np.load('test_prediction.npy')
 
 output_steps = 10
 # ================ step-wise rmse =================
