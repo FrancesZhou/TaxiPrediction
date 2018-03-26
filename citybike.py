@@ -12,6 +12,7 @@ sys.path.append('/home/zx/TaxiPrediction/model/')
 sys.path.append('./util/')
 sys.path.append('./data/')
 from ConvLSTM import *
+from autoencoder import *
 from AttConvLSTM import *
 from ResNet import *
 from preprocessing import *
@@ -54,6 +55,8 @@ tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
+tf.app.flags.DEFINE_integer('use_ae', 1,
+                            """whether to use autoencoder to cluster""")
 # train/test
 tf.app.flags.DEFINE_integer('train', 1,
                             """whether to train""")
@@ -170,16 +173,43 @@ def main():
                 pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/ConvLSTM/',
                 test_model='citybike-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/ConvLSTM/')
         elif FLAGS.model=='AttConvLSTM':
-            # k-means to cluster train_data
             # train_data: [num, row, col, channel]
-            print('k-means to cluster...')
-            vector_data = np.reshape(train_data, (train_data.shape[0], -1))
-            #init_vectors = vector_data[:FLAGS.cluster_num, :]
-    	    #cluster_centroid = init_vectors
-            kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
-            cluster_centroid = kmeans.cluster_centers_
-            # reshape to [cluster_num, row, col, channel]
-            cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+            if FLAGS.use_ae:
+                # auto-encoder to cluster train_data
+                print('auto-encoder to cluster...')
+                ae = AutoEncoder(input_dim=input_dim, z_dim=[4, 4, 16],
+                                 layer={'encoder': ['conv', 'conv'],
+                                        'decoder': ['conv', 'conv']},
+                                 layer_param={'encoder': [[[3,3], [1,2,2,1], 8],
+                                                           [[3,3], [1,2,2,1], 16]],
+                                              'decoder': [[[3,3], [1,2,2,1], 8],
+                                                          [[3,3], [1,2,2,1], 2]]})
+                model_path = 'citybike-results/model_save/AEAttConvLSTM/'
+                log_path = 'citybike-results/log/AEAttConvLSTM/'
+                ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path)
+                train_z_data = ae.get_z(train_data)
+                # k-means to cluster train_z_data
+                vector_data = np.reshape(train_z_data, (train_data.shape[0], -1))
+                kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
+                                tol=0.00000001).fit(vector_data)
+                cluster_centroid = kmeans.cluster_centers_
+                # reshape to [cluster_num, row, col, channel]
+                cluster_centroid = np.reshape(cluster_centroid,
+                                              (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
+                # decoder to original space
+                cluster_centroid = ae.get_y(cluster_centroid)
+            else:
+                # k-means to cluster train_data
+                print('k-means to cluster...')
+                vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+                #init_vectors = vector_data[:FLAGS.cluster_num, :]
+                #cluster_centroid = init_vectors
+                kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
+                cluster_centroid = kmeans.cluster_centers_
+                # reshape to [cluster_num, row, col, channel]
+                cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+                model_path = 'citybike-results/model_save/AttConvLSTM/'
+                log_path = 'citybike-results/log/AttConvLSTM/'
             # build model
             print('build AttConvLSTM model...')
             model = AttConvLSTM(input_dim=input_dim, 
@@ -205,8 +235,8 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/AttConvLSTM/',
-                test_model='citybike-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/AttConvLSTM/')
+                pretrained_model=FLAGS.pretrained_model, model_path=model_path,
+                test_model=model_path+'model-'+str(FLAGS.n_epochs), log_path=log_path)
         if FLAGS.train:
             print('begin training...')
             test_prediction, _ = solver.train(test)
