@@ -192,14 +192,17 @@ def main():
                                  batch_size=FLAGS.batch_size)
                 #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
                 train_z_data = ae.get_z(train_data)
+                train_z_data = np.array(train_z_data)
+                print train_z_data.shape
                 # k-means to cluster train_z_data
                 vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
                 kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
                                 tol=0.00000001).fit(vector_data)
                 cluster_centroid = kmeans.cluster_centers_
+                print np.array(cluster_centroid).shape
                 # reshape to [cluster_num, row, col, channel]
                 cluster_centroid = np.reshape(cluster_centroid,
-                                              [-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]])
+                                              (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
                 # decoder to original space
                 cluster_centroid = ae.get_y(cluster_centroid)
             else:

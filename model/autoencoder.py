@@ -143,7 +143,8 @@ class AutoEncoder(object):
             for batch_i in range(int(np.ceil(data.shape[0]/float(self.batch_size)))):
                 x = data[batch_i*self.batch_size: min(data.shape[0], (batch_i + 1)*self.batch_size)]
                 z_batch, l = sess.run([z, loss], feed_dict={self.x: x})
-                data_z.append(np.reshape(z_batch, [len(z_batch), -1]))
+                data_z.append(z_batch)
+                #data_z.append(np.reshape(z_batch, [len(z_batch), -1]))
                 recon_loss += l
             mean_loss = recon_loss/data.shape[0]
             print 'reconstruction loss is %f' % mean_loss
