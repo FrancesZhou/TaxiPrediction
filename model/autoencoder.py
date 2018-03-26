@@ -86,7 +86,7 @@ class AutoEncoder(object):
         # decoder
         x_ = self.decoder(z)
         #y_ = self.decoder(self.z)
-        loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :, :])
+        loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :])
         return z, loss
 
     def train(self, data, batch_size, learning_rate, n_epochs, model_save_path):
