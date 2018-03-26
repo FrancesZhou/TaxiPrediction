@@ -18,7 +18,7 @@ from preprocessing import *
 from utils import *
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer('gpu', 0,
+tf.app.flags.DEFINE_string('gpu', '0',
                             """which gpu to use: 0 or 1""")
 
 tf.app.flags.DEFINE_integer('input_steps', 10,
