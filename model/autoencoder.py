@@ -22,8 +22,8 @@ class AutoEncoder(object):
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.const_initializer = tf.constant_initializer()
 
-        self.x = tf.placeholder_with_default(tf.constant(0, dtype=tf.float32, shape=[3]), [None, self.input_row, self.input_col, self.input_channel])
-        self.z = tf.placeholder_with_default(tf.constant(0, dtype=tf.float32, shape=[3]), [None, self.z_row, self.z_col, self.z_channel])
+        self.x = tf.placeholder_with_default(tf.constant(0, dtype=tf.float32, shape=[1, self.input_row, self.input_col, self.input_channel]), [None, self.input_row, self.input_col, self.input_channel])
+        self.z = tf.placeholder_with_default(tf.constant(0, dtype=tf.float32, shape=[1, self.z_row, self.z_col, self.z_channel]), [None, self.z_row, self.z_col, self.z_channel])
         #self.y = tf.placeholder(tf.float32, [None, self.input_row, self.input_col, self.input_channel])
 
     def conv(self, inputs, filter, strides, output_features, padding, idx):
