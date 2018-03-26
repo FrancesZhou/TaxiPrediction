@@ -90,6 +90,7 @@ class AutoEncoder(object):
         #self.encoder_w = encoder_w
         # decoder
         x_ = self.decoder(z)
+        tf.get_variable_scope().reuse_variables()
         y_ = self.decoder(self.z)
         loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :])
         return z, y_, loss
