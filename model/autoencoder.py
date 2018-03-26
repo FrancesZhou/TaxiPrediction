@@ -54,35 +54,35 @@ class AutoEncoder(object):
     def encoder(self, x):
         layer = self.encoder_layer
         param = self.encoder_layer_param
-        encoder_w = []
+        #encoder_w = []
         y = x
         with tf.variable_scope('encoder'):
             # layer: ['conv', 'conv_lstm']
             for i in range(len(layer)):
                 if layer[i]=='conv':
                     y, w = self.conv(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i)
-                    encoder_w.append(w)
+                    #encoder_w.append(w)
                 else:
                     continue
-        return y, encoder_w
+        return y
 
     def decoder(self, z):
         layer = self.decoder_layer
         param = self.decoder_layer_param
         y = z
-        encoder_w = self.encoder_w
+        #encoder_w = self.encoder_w
         with tf.variable_scope('decoder'):
             for i in range(len(layer)):
                 if layer[i]=='conv':
-                    y = self.conv_transpose(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i, given_w=encoder_w[-i])
+                    y = self.conv_transpose(y, param[i][0], param[i][1], param[i][2], padding='SAME', idx=i)
         return y
 
     def build_model(self):
         # x = self.x
         # x: [batch_size, row, col, channel]
         # encoder
-        z, encoder_w = self.encoder(self.x)
-        self.encoder_w = encoder_w
+        z = self.encoder(self.x)
+        #self.encoder_w = encoder_w
         # decoder
         x_ = self.decoder(z)
         #y_ = self.decoder(self.z)
