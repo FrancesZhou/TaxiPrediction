@@ -49,7 +49,7 @@ class ModelSolver(object):
         # y_val = np.asarray(self.val_data['y'])
         #print('shape of x: '+x.shape())
         # build graphs
-        y_, loss, w_loss, _ = self.model.build_model()
+        y_, loss, w_loss, s_weight = self.model.build_model()
 
         #tf.get_variable_scope().reuse_variables()
         #y_ = self.model.build_sampler()
@@ -141,7 +141,6 @@ class ModelSolver(object):
                 #rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
                 print("at epoch " + str(e) + ", validate loss is " + str(val_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
                 print "elapsed time: ", time.time() - start_t
-
                 if (e+1)%self.save_every == 0:
                     save_name = self.model_path+'model'
                     saver.save(sess, save_name, global_step=e+1)
@@ -174,8 +173,12 @@ class ModelSolver(object):
             #rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
             #y_pre_test = np.asarray(y_pre_test)
             print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
-            y_pre_test_n = []
+            # ----- weight -----
+            step_weight = sess.run(s_weight, feed_dict=feed_dict)
+            print 'step_weight: '
+            print step_weight
             # ============================= for test 1_to_n ==============================
+            y_pre_test_n = []
             if self.cpt_ext:
                 print('test for next n steps...')
                 seq = test_1_to_n_data['data']
