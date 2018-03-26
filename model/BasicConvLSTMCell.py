@@ -161,7 +161,7 @@ def _conv_linear(args, filter_size, num_features, bias, bias_start=0.0, scope_na
     else:
       total_arg_size_depth += shape[3]
 
-  #dtype = [a.dtype for a in args][0]
+  dtype = [a.dtype for a in args][0]
   #print dtype
 
   # Now the computation.
