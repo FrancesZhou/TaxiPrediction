@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import os
 import sys
 from sklearn.cluster import KMeans
 from solver import ModelSolver
@@ -17,6 +18,8 @@ from preprocessing import *
 from utils import *
 
 FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_integer('gpu', 0,
+                            """which gpu to use: 0 or 1""")
 
 tf.app.flags.DEFINE_integer('input_steps', 10,
                             """num of input_steps""")
@@ -24,7 +27,7 @@ tf.app.flags.DEFINE_integer('output_steps', 10,
                             """num of output_steps""")
 tf.app.flags.DEFINE_integer('batch_size', 16,
                             """batch size for training""")
-tf.app.flags.DEFINE_integer('n_epochs', 30,
+tf.app.flags.DEFINE_integer('n_epochs', 20,
                             """num of epochs""")
 tf.app.flags.DEFINE_float('keep_prob', .9,
                             """for dropout""")
@@ -53,6 +56,7 @@ tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 
 def main():
+    os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
     # preprocessing class
     pre_process = MinMaxNormalization01()
     print('load train, validate, test data...')

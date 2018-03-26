@@ -24,20 +24,20 @@ import tensorflow as tf
 #   @property
 #   def zero_state(self, batch_size):
 #   	raise NotImplementedError("Abstract method")
-  # def zero_state(self, batch_size, dtype):
-  #   """Return zero-filled state tensor(s).
-  #   Args:
-  #     batch_size: int, float, or unit Tensor representing the batch size.
-  #     dtype: the data type to use for the state.
-  #   Returns:
-  #     tensor of shape '[batch_size x shape[0] x shape[1] x num_features]
-  #     filled with zeros
-  #   """
-    
-  #   shape = self.shape 
-  #   num_features = self.num_features
-  #   zeros = tf.zeros([batch_size, shape[0], shape[1], num_features * 2]) 
-  #   return zeros
+# def zero_state(self, batch_size, dtype):
+#   """Return zero-filled state tensor(s).
+#   Args:
+#     batch_size: int, float, or unit Tensor representing the batch size.
+#     dtype: the data type to use for the state.
+#   Returns:
+#     tensor of shape '[batch_size x shape[0] x shape[1] x num_features]
+#     filled with zeros
+#   """
+
+#   shape = self.shape
+#   num_features = self.num_features
+#   zeros = tf.zeros([batch_size, shape[0], shape[1], num_features * 2])
+#   return zeros
 
 #class BasicConvLSTMCell(ConvRNNCell):
 class BasicConvLSTMCell(tf.contrib.rnn.BasicRNNCell):
@@ -85,21 +85,21 @@ class BasicConvLSTMCell(tf.contrib.rnn.BasicRNNCell):
 
   
   def zero_state(self, batch_size):
-	"""Return zero-filled state tensor(s).
-	Args:
-	  batch_size: int, float, or unit Tensor representing the batch size.
-	  dtype: the data type to use for the state.
-	Returns:
-	  tensor of shape '[batch_size x shape[0] x shape[1] x num_features]
-	  filled with zeros
-	"""
+    """Return zero-filled state tensor(s).
+    Args:
+      batch_size: int, float, or unit Tensor representing the batch size.
+      dtype: the data type to use for the state.
+    Returns:
+      tensor of shape '[batch_size x shape[0] x shape[1] x num_features]
+      filled with zeros
+    """
 
-	shape = self.shape 
-	num_features = self.num_features
-	c_zeros = tf.zeros([batch_size, shape[0], shape[1], num_features])
-	h_zeros = tf.zeros([batch_size, shape[0], shape[1], num_features]) 
-	zeros = tf.contrib.rnn.LSTMStateTuple(c_zeros, h_zeros)
-	return zeros
+    shape = self.shape
+    num_features = self.num_features
+    c_zeros = tf.zeros([batch_size, shape[0], shape[1], num_features])
+    h_zeros = tf.zeros([batch_size, shape[0], shape[1], num_features])
+    zeros = tf.contrib.rnn.LSTMStateTuple(c_zeros, h_zeros)
+    return zeros
 
   #def __call__(self, inputs, state, scope=None, reuseL=True):
   def __call__(self, inputs, state, scope=None):
@@ -161,19 +161,17 @@ def _conv_linear(args, filter_size, num_features, bias, bias_start=0.0, scope_na
     else:
       total_arg_size_depth += shape[3]
 
-  dtype = [a.dtype for a in args][0]
-  print dtype
+  #dtype = [a.dtype for a in args][0]
+  #print dtype
 
   # Now the computation.
   with tf.variable_scope(scope_name) as scope:
-  #with tf.variable_scope(scope_name, reuse=reuseL) as scope:
+    #with tf.variable_scope(scope_name, reuse=reuseL) as scope:
     matrix = tf.get_variable('Matrix', [filter_size[0], filter_size[1], total_arg_size_depth, num_features], dtype=dtype)
-
-    print tf.get_variable_scope().name
-    print tf.get_variable_scope().reuse
-
-    print matrix
-
+    #print tf.get_variable_scope().name
+    #print tf.get_variable_scope().reuse
+    #print matrix
+    #
     if len(args) == 1:
       res = tf.nn.conv2d(args[0], matrix, strides=[1, 1, 1, 1], padding='SAME')
     else:
