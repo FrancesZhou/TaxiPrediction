@@ -79,7 +79,8 @@ class ModelSolver(object):
             saver = tf.train.Saver(tf.global_variables())
             if self.pretrained_model is not None:
                 print "Start training with pretrained model..."
-                saver.restore(sess, self.pretrained_model)
+                pretrained_model_path = self.model_path + self.pretrained_model
+                saver.restore(sess, pretrained_model_path)
 
             #curr_loss = 0
             start_t = time.time()
@@ -255,27 +256,15 @@ class ModelSolver(object):
             y_pre_test_n = np.asarray(y_pre_test_n)
             return y_pre_test, y_pre_test_n
 
-
-    def test(self, data, save_outputs=True):
-        #x = np.asarray(data['x'])
-        #y = np.asarray(data['y'])
+    def test(self, data):
+        #def test(self, data, save_outputs=True):
         x = data['x']
         y = data['y']
-
         # build graphs
         y_, loss = self.model.build_model()
-
-        #y = np.asarray(y)
-        #y_pred_all = np.ndarray(np.array(y).shape)
         y_pred_all = []
 
-        #y_real = tf.convert_to_tensor(y)
-        #loss = 2*tf.nn.l2_loss(y_real-y_)
-        #summary_op = tf.summary.merge_all()
-
         with tf.Session() as sess:
-            #tf.initialize_all_variables().run()
-            #summary_writer = tf.summary.FileWriter(self.log_path, graph=sess.graph)
             saver = tf.train.Saver()
             saver.restore(sess, self.test_model)
             start_t = time.time()
@@ -289,11 +278,8 @@ class ModelSolver(object):
                 else:
                     feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
                 y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-                if len(y_pred_all)==0:
-                    y_pred_all = np.vstack(y_p)
-                else:
-                    y_pred_all = np.vstack((y_pred_all, np.vstack(y_p)))
                 t_loss += l
+                y_pred_all.append(y_p)
 
             # y : [batches, batch_size, seq_length, row, col, channel]
             print(np.array(y).shape)
@@ -305,55 +291,83 @@ class ModelSolver(object):
             #rmse = np.sqrt(t_loss/(np.prod(np.array(y).shape)))
             print("test loss is " + str(self.preprocessing.real_loss(rmse)))
             print("elapsed time: ", time.time() - start_t)
-            if save_outputs:
-                np.save('test_outputs.npy',y_pred_all)
+            return y_pred_all
+            # if save_outputs:
+            #     np.save('test_outputs.npy',y_pred_all)
 
-    def test_1_to_n(self, data, n=10, close=3, period=4, trend=4, save_outputs=True):
+    def test_1_to_n(self, data):
         seq = data['data']
         timestamps = data['timestamps']
-        pre_index = max(close*1, period*24, trend*24*7)
         # build graphs
         y_, loss = self.model.build_model()
-        y_pred_all = []
+        #y_pred_all = []
+        print('test for next n steps...')
+        c = 1
+        p = 24
+        t = 24 * 7
+        pre_index = max(self.model.input_conf[0][0] * c, self.model.input_conf[1][0] * p,
+                        self.model.input_conf[2][0] * t)
+        n = self.model.output_steps
+        close = self.model.input_conf[0][0]
+        period = self.model.input_conf[1][0]
+        trend = self.model.input_conf[2][0]
+        print(pre_index, n, close, period, trend)
+        depends = [[c * j for j in range(1, close + 1)],
+                   [p * j for j in range(1, period + 1)],
+                   [t * j for j in range(1, trend + 1)]]
         with tf.Session() as sess:
             saver = tf.train.Saver()
             saver.restore(sess, self.test_model)
-            start_t = time.time()
-            #y_pred_all = np.ndarray(y.shape)
+            # start_t = time.time()
             t_loss = 0
             i = pre_index
-            while i<len(seq)-n:
+            y_pre_test_n = np.zeros([len(seq) - n - pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3],
+                                     self.model.input_conf[0][1]])
+            while i < len(seq) - n:
                 # seq_i : pre_index+n
-                seq_i = seq[i-pre_index: i+n]
-                time_i = timestamps[i-pre_index: i+n]
-                loss_i = 0
+                if i % 100 == 0:
+                    print("test_1_to_n at i = " + str(i))
+                seq_i = np.copy(seq[i - pre_index: i + n])
+                time_i = timestamps[i - pre_index: i + n]
                 for n_i in range(n):
-                    x, y = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=timestamps[n_i: n_i+pre_index+1],
-                                        batch_size=1, close=close, period=period, trend=trend)
-                    #print(np.array(x[0][0]).shape)
-                    #print(np.array(x[0][1]).shape)
-                    #print(np.array(x[0][2]).shape)
-                    #print(np.array(x[0][3]).shape)
-                    #print(np.array(y[0]).shape)
-                    feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]),
-                                self.model.x_ext: np.array(x[0][3]),
-                                self.model.y: np.array(y[0])}
+                    x = []
+                    for d in range(len(depends)):
+                        x_d = np.transpose(
+                            np.vstack(np.transpose(seq_i[n_i + pre_index - np.array(depends[d]), :, :, :], [0, 3, 1, 2])),
+                            [1, 2, 0])
+                        # print(x_d.shape)
+                        x_d = np.expand_dims(x_d, axis=0)
+                        x.append(x_d)
+                    ext_i = time.strptime(time_i[n_i + pre_index][:8], '%Y%m%d').tm_wday
+                    v = [0 for _ in range(7)]
+                    v[ext_i] = 1
+                    if ext_i >= 5:
+                        v.append(0)
+                    else:
+                        v.append(1)
+                    v = np.expand_dims(np.asarray(v), axis=0)
+                    x.append(np.asarray(v))
+                    # print(x[0].shape)
+                    y = np.expand_dims(seq[i + n_i], axis=0)
+                    feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]),
+                                 self.model.x_t: np.array(x[2]),
+                                 self.model.x_ext: np.array(x[3]),
+                                 self.model.y: np.array(y)}
                     y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-                    seq_i[n_i+pre_index] = y_p
-                    loss_i += l
-                y_pred_all.append(seq_i[pre_index:])
-                t_loss += loss_i
+                    # l = np.sum(np.square(y_p-y))
+                    # print(l)
+                    seq_i[n_i + pre_index] = y_p
+                    t_loss += l
+                y_pre_test_n[i - pre_index] = seq_i[pre_index:]
                 i += 1
             row, col, flow = np.array(seq).shape[1:]
-            #print(row,col,flow)
-            test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
-            #print(test_count)
-            rmse = np.sqrt(t_loss/test_count)
-            print("test loss is " + str(self.preprocessing.real_loss(rmse)))
-            print("elapsed time: ", time.time() - start_t)
-            if save_outputs:
-                np.save('test_n_outputs.npy',y_pred_all)
-
+            print(row, col, flow)
+            test_count = (len(seq) - pre_index - n) * n * (row * col * flow)
+            print(test_count)
+            rmse = np.sqrt(t_loss / test_count)
+            print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
+        y_pre_test_n = np.asarray(y_pre_test_n)
+        return y_pre_test_n
 
 
 

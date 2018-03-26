@@ -54,6 +54,13 @@ tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
+# train/test
+tf.app.flags.DEFINE_integer('train', 1,
+                            """whether to train""")
+tf.app.flags.DEFINE_integer('test', 0,
+                            """whether to test""")
+tf.app.flags.DEFINE_string('pretrained_model', None,
+                           """pretrained_model_name""")
 
 def main():
     os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
@@ -200,11 +207,15 @@ def main():
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
                 pretrained_model=None, model_path='citybike-results/model_save/AttConvLSTM/', 
                 test_model='citybike-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/AttConvLSTM/')
-        print('begin training...')
-        test_prediction, _ = solver.train(test)
-        test_target = np.asarray(test_y)
-        #print('test trained model...')
-        #solver.test(test)
+        if FLAGS.train:
+            print('begin training...')
+            test_prediction, _ = solver.train(test)
+            test_target = np.asarray(test_y)
+        if FLAGS.test:
+            print('test trained model...')
+            solver.test_model = solver.model_path + FLAGS.pretrained_model
+            test_prediction, _ = solver.test(test)
+            test_target = np.asarray(test_y)
     np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
     np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
