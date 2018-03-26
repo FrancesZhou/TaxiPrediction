@@ -4,7 +4,7 @@ import tensorflow as tf
 import BasicConvLSTMCell
 
 class AttConvLSTM(object):
-    def __init__(self, input_dim=[64,64,2], att_inputs=[], att_nodes=1024, batch_size=32, layer={}, layer_param={}, input_steps=10, output_steps=10):
+    def __init__(self, input_dim=[64,64,2], att_inputs=[], att_nodes=1024, batch_size=32, layer={}, layer_param={}, input_steps=10, output_steps=10, reg_lambda=0.02):
         #self.input_dim = input_dim
         self.input_row = input_dim[0]
         self.input_col = input_dim[1]
@@ -19,6 +19,8 @@ class AttConvLSTM(object):
         self.seq_length = input_steps + output_steps
         self.input_steps = input_steps
         self.output_steps = output_steps
+
+        self.reg_lambda = reg_lambda
 
         self.encoder_layer = layer['encoder']
         self.decoder_layer = layer['decoder']
@@ -183,9 +185,15 @@ class AttConvLSTM(object):
         y_ = tf.stack(y_)
         y_ = tf.transpose(y_, [1,0,2,3,4])
         loss = 2*tf.nn.l2_loss(y-y_[:,:,:,:,:])
-        #return loss/tf.to_float(batch_size)
+        # return loss/tf.to_float(batch_size)
         # tf.sqrt(loss/tf.to_float(batch_size*seq_length*row*col*channel))
-        return y_, loss
+        #  weighted loss
+        step_weight_0 = tf.get_variable('step_weight', [self.output_steps], initializer=self.const_initializer)
+        step_weight = tf.nn.softmax(step_weight_0)
+        square_loss = tf.reduce_mean(tf.square(y - y_), [0, 2, 3, 4])
+        weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + \
+                        self.reg_lambda * tf.nn.l2_loss(step_weight_0)
+        return y_, loss, weighted_loss, step_weight
 
     # def build_sampler(self):
     # 	x = self.x
