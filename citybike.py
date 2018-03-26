@@ -112,7 +112,7 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='citybike-results/model_save/ResNet/', 
+                pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/ResNet/',
                 test_model='citybike-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/ResNet/', 
                 cross_val=False, cpt_ext=True)
         print('begin training...')
@@ -167,7 +167,7 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='citybike-results/model_save/ConvLSTM/', 
+                pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/ConvLSTM/',
                 test_model='citybike-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/ConvLSTM/')
         elif FLAGS.model=='AttConvLSTM':
             # k-means to cluster train_data
@@ -205,7 +205,7 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='citybike-results/model_save/AttConvLSTM/', 
+                pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/AttConvLSTM/',
                 test_model='citybike-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/AttConvLSTM/')
         if FLAGS.train:
             print('begin training...')
