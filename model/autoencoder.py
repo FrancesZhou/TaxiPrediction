@@ -90,14 +90,14 @@ class AutoEncoder(object):
         #self.encoder_w = encoder_w
         # decoder
         x_ = self.decoder(z)
-        #y_ = self.decoder(self.z)
+        y_ = self.decoder(self.z)
         loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :])
-        return z, loss
+        return z, y_, loss
 
     def train(self, data, batch_size, learning_rate, n_epochs, pretrained_model=None):
         self.batch_size = batch_size
         # build model
-        z, loss = self.build_model()
+        z, _, loss = self.build_model()
         # train op
         with tf.name_scope('optimizer'):
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -128,7 +128,7 @@ class AutoEncoder(object):
                 saver.save(sess, save_name, global_step=epoch_i+1)
 
     def get_z(self, data, pretrained_model=None):
-        z, loss = self.build_model()
+        z, _, loss = self.build_model()
         data_z = []
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
@@ -152,7 +152,7 @@ class AutoEncoder(object):
         return data_z
 
     def get_y(self, z_data, pretrained_model=None):
-        y_ = self.decoder(self.z)
+        _, y_, _ = self.build_model()
         y_data = []
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
