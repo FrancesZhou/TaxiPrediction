@@ -4,7 +4,7 @@ import tensorflow as tf
 import BasicConvLSTMCell
 
 class ConvLSTM(object):
-    def __init__(self, input_dim=[64,64,2], batch_size=32, layer={}, layer_param={}, input_steps=10, output_steps=10):
+    def __init__(self, input_dim=[64,64,2], batch_size=32, layer={}, layer_param={}, input_steps=10, output_steps=10, reg_lambda=0.02):
         #self.input_dim = input_dim
         self.input_row = input_dim[0]
         self.input_col = input_dim[1]
@@ -14,6 +14,8 @@ class ConvLSTM(object):
         self.seq_length = input_steps + output_steps
         self.input_steps = input_steps
         self.output_steps = output_steps
+
+        self.reg_lambda = reg_lambda
 
         self.encoder_layer = layer['encoder']
         self.decoder_layer = layer['decoder']
@@ -109,7 +111,7 @@ class ConvLSTM(object):
         x = self.x
         y = self.y
         # x: [batch_size, seq_length, row, col, channel]
-        batch_size = tf.shape(x)[0]
+        #batch_size = tf.shape(x)[0]
         #self.init_state_encoder_conv_lstm = self.encoder_conv_lstm[0].zero_state(batch_size)
         # encoder
         state = self.encoder_state
@@ -125,7 +127,13 @@ class ConvLSTM(object):
         loss = 2*tf.nn.l2_loss(y-y_[:,:,:,:,:])
         #return loss/tf.to_float(batch_size)
         # tf.sqrt(loss/tf.to_float(batch_size*seq_length*row*col*channel))
-        return y_, loss
+        # weighted loss
+        step_weight = tf.get_variable('step_weight', [self.output_steps], initializer=self.const_initializer)
+        step_weight = tf.nn.softmax(step_weight)
+        square_loss = tf.reduce_mean(tf.square(y-y_), [0, 2, 3, 4])
+        weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + \
+                        self.reg_lambda * tf.nn.l2_loss(step_weight)
+        return y_, loss, weighted_loss
 
     # def build_sampler(self):
     # 	x = self.x

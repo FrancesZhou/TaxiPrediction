@@ -49,7 +49,7 @@ class ModelSolver(object):
         # y_val = np.asarray(self.val_data['y'])
         #print('shape of x: '+x.shape())
         # build graphs
-        y_, loss = self.model.build_model()
+        y_, loss, w_loss = self.model.build_model()
 
         #tf.get_variable_scope().reuse_variables()
         #y_ = self.model.build_sampler()
@@ -57,7 +57,7 @@ class ModelSolver(object):
         # train op
         with tf.name_scope('optimizer'):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
-            grads = tf.gradients(loss, tf.trainable_variables())
+            grads = tf.gradients(w_loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
             train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)
 
@@ -89,7 +89,6 @@ class ModelSolver(object):
                 if self.cross_val:
                     x, x_val, y, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
                     #print(np.array(x).shape)
-                    #print(np.array(y).shape)
                 for i in range(len(x)):
                     if self.cpt_ext:
                         #print(x[i][0].shape)
@@ -119,7 +118,7 @@ class ModelSolver(object):
                 t_rmse = np.sqrt(curr_loss/t_count)
                 #t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
                 print("at epoch " + str(e) + ", train loss is " + str(curr_loss) + ' , ' + str(t_rmse) + ' , ' + str(self.preprocessing.real_loss(t_rmse)))
-                # validate
+                # ================================= validate =================================
                 val_loss = 0
                 for i in range(len(y_val)):
                     if self.cpt_ext:
