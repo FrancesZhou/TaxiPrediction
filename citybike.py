@@ -188,7 +188,8 @@ def main():
                                                            [[3,3], [1,2,2,1], 16]],
                                               'decoder': [[[3,3], [1,2,2,1], 8],
                                                           [[3,3], [1,2,2,1], 2]]},
-                                 model_save_path=model_path)
+                                 model_save_path=model_path,
+                                 batch_size=FLAGS.batch_size)
                 #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
                 train_z_data = ae.get_z(train_data)
                 # k-means to cluster train_z_data

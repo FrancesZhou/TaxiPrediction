@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 class AutoEncoder(object):
-    def __init__(self, input_dim=[64, 64, 2], z_dim=[16, 16, 16], layer={}, layer_param={}, model_save_path=None):
+    def __init__(self, input_dim=[64, 64, 2], z_dim=[16, 16, 16], layer={}, layer_param={}, model_save_path=None, batch_size=32):
         self.input_row = input_dim[0]
         self.input_col = input_dim[1]
         self.input_channel = input_dim[2]
@@ -22,6 +22,7 @@ class AutoEncoder(object):
         if not os.path.exists(model_save_path):
             os.makedirs(model_save_path)
         self.model_path = model_save_path
+        self.batch_size = batch_size
 
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.const_initializer = tf.constant_initializer()
