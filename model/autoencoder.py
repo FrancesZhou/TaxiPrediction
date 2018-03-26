@@ -89,7 +89,7 @@ class AutoEncoder(object):
         loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :])
         return z, loss
 
-    def train(self, data, batch_size, learning_rate, n_epochs, model_save_path):
+    def train(self, data, batch_size, learning_rate, n_epochs, model_save_path, pretrained_model=None):
         if not os.path.exists(model_save_path):
             os.makedirs(model_save_path)
         self.model_path = model_save_path
@@ -109,6 +109,10 @@ class AutoEncoder(object):
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             tf.global_variables_initializer().run()
             saver = tf.train.Saver(tf.global_variables())
+            if pretrained_model is not None:
+                print "start training with pretrained model..."
+                pretrained_model_path = self.model_path + pretrained_model
+                saver.restore(sess, pretrained_model_path)
             for epoch_i in range(n_epochs):
                 curr_loss = 0
                 for batch_i in np.random.permutation(num_batch):
