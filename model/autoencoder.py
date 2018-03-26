@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 class AutoEncoder(object):
-    def __init__(self, input_dim=[64, 64, 2], z_dim=[16, 16, 16], layer={}, layer_param={}):
+    def __init__(self, input_dim=[64, 64, 2], z_dim=[16, 16, 16], layer={}, layer_param={}, model_save_path=None):
         self.input_row = input_dim[0]
         self.input_col = input_dim[1]
         self.input_channel = input_dim[2]
@@ -18,6 +18,10 @@ class AutoEncoder(object):
         self.decoder_layer = layer['decoder']
         self.encoder_layer_param = layer_param['encoder']
         self.decoder_layer_param = layer_param['decoder']
+
+        if not os.path.exists(model_save_path):
+            os.makedirs(model_save_path)
+        self.model_path = model_save_path
 
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.const_initializer = tf.constant_initializer()
@@ -89,10 +93,7 @@ class AutoEncoder(object):
         loss = 2*tf.nn.l2_loss(self.x-x_[:, :, :, :])
         return z, loss
 
-    def train(self, data, batch_size, learning_rate, n_epochs, model_save_path, pretrained_model=None):
-        if not os.path.exists(model_save_path):
-            os.makedirs(model_save_path)
-        self.model_path = model_save_path
+    def train(self, data, batch_size, learning_rate, n_epochs, pretrained_model=None):
         self.batch_size = batch_size
         # build model
         z, loss = self.build_model()

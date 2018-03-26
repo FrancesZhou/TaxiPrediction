@@ -179,19 +179,20 @@ def main():
             if FLAGS.use_ae:
                 # auto-encoder to cluster train_data
                 print('auto-encoder to cluster...')
+                model_path = 'citybike-results/model_save/AEAttConvLSTM/'
+                log_path = 'citybike-results/log/AEAttConvLSTM/'
                 ae = AutoEncoder(input_dim=input_dim, z_dim=[4, 4, 16],
                                  layer={'encoder': ['conv', 'conv'],
                                         'decoder': ['conv', 'conv']},
                                  layer_param={'encoder': [[[3,3], [1,2,2,1], 8],
                                                            [[3,3], [1,2,2,1], 16]],
                                               'decoder': [[[3,3], [1,2,2,1], 8],
-                                                          [[3,3], [1,2,2,1], 2]]})
-                model_path = 'citybike-results/model_save/AEAttConvLSTM/'
-                log_path = 'citybike-results/log/AEAttConvLSTM/'
-                #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path, pretrained_model=FLAGS.ae_pretrain)
+                                                          [[3,3], [1,2,2,1], 2]]},
+                                 model_save_path=model_path)
+                #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
                 train_z_data = ae.get_z(train_data)
                 # k-means to cluster train_z_data
-                vector_data = np.reshape(train_z_data, (train_data.shape[0], -1))
+                vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
                 kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
                                 tol=0.00000001).fit(vector_data)
                 cluster_centroid = kmeans.cluster_centers_
