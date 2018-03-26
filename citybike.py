@@ -188,7 +188,7 @@ def main():
                                                           [[3,3], [1,2,2,1], 2]]})
                 model_path = 'citybike-results/model_save/AEAttConvLSTM/'
                 log_path = 'citybike-results/log/AEAttConvLSTM/'
-                ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path, pretrained_model=FLAGS.ae_pretraine)
+                #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path, pretrained_model=FLAGS.ae_pretrain)
                 train_z_data = ae.get_z(train_data)
                 # k-means to cluster train_z_data
                 vector_data = np.reshape(train_z_data, (train_data.shape[0], -1))
@@ -197,7 +197,7 @@ def main():
                 cluster_centroid = kmeans.cluster_centers_
                 # reshape to [cluster_num, row, col, channel]
                 cluster_centroid = np.reshape(cluster_centroid,
-                                              (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
+                                              [-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]])
                 # decoder to original space
                 cluster_centroid = ae.get_y(cluster_centroid)
             else:
