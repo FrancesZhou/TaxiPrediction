@@ -293,7 +293,8 @@ class ModelSolver(object):
             print("elapsed time: ", time.time() - start_t)
             # ----- weight -----
             step_weight = sess.run(s_weight, feed_dict=feed_dict)
-            print 'step_weight: ' + step_weight
+            print 'step_weight: '
+            print step_weight
             return y_pred_all
             # if save_outputs:
             #     np.save('test_outputs.npy',y_pred_all)

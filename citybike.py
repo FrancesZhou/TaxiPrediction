@@ -214,7 +214,7 @@ def main():
         if FLAGS.test:
             print('test trained model...')
             solver.test_model = solver.model_path + FLAGS.pretrained_model
-            test_prediction, _ = solver.test(test)
+            test_prediction = solver.test(test)
             test_target = np.asarray(test_y)
     np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
     np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
