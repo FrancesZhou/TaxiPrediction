@@ -49,7 +49,7 @@ class ModelSolver(object):
         # y_val = np.asarray(self.val_data['y'])
         #print('shape of x: '+x.shape())
         # build graphs
-        y_, loss, w_loss = self.model.build_model()
+        y_, loss, w_loss, _ = self.model.build_model()
 
         #tf.get_variable_scope().reuse_variables()
         #y_ = self.model.build_sampler()
@@ -261,7 +261,7 @@ class ModelSolver(object):
         x = data['x']
         y = data['y']
         # build graphs
-        y_, loss = self.model.build_model()
+        y_, loss, _, s_weight = self.model.build_model()
         y_pred_all = []
 
         with tf.Session() as sess:
@@ -291,6 +291,9 @@ class ModelSolver(object):
             #rmse = np.sqrt(t_loss/(np.prod(np.array(y).shape)))
             print("test loss is " + str(self.preprocessing.real_loss(rmse)))
             print("elapsed time: ", time.time() - start_t)
+            # ----- weight -----
+            step_weight = sess.run(s_weight, feed_dict=feed_dict)
+            print 'step_weight: ' + step_weight
             return y_pred_all
             # if save_outputs:
             #     np.save('test_outputs.npy',y_pred_all)

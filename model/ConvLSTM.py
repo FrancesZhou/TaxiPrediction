@@ -133,7 +133,7 @@ class ConvLSTM(object):
         square_loss = tf.reduce_mean(tf.square(y-y_), [0, 2, 3, 4])
         weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + \
                         self.reg_lambda * tf.nn.l2_loss(step_weight)
-        return y_, loss, weighted_loss
+        return y_, loss, weighted_loss, step_weight
 
     # def build_sampler(self):
     # 	x = self.x
