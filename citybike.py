@@ -57,6 +57,8 @@ tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 tf.app.flags.DEFINE_integer('use_ae', 1,
                             """whether to use autoencoder to cluster""")
+tf.app.flags.DEFINE_string('ae_pretrain', None,
+                           """pretrained_model for autoencoder""")
 # train/test
 tf.app.flags.DEFINE_integer('train', 1,
                             """whether to train""")
@@ -186,7 +188,7 @@ def main():
                                                           [[3,3], [1,2,2,1], 2]]})
                 model_path = 'citybike-results/model_save/AEAttConvLSTM/'
                 log_path = 'citybike-results/log/AEAttConvLSTM/'
-                ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path)
+                ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, model_save_path=model_path, pretrained_model=FLAGS.ae_pretraine)
                 train_z_data = ae.get_z(train_data)
                 # k-means to cluster train_z_data
                 vector_data = np.reshape(train_z_data, (train_data.shape[0], -1))
@@ -246,8 +248,8 @@ def main():
             solver.test_model = solver.model_path + FLAGS.pretrained_model
             test_prediction = solver.test(test)
             test_target = np.asarray(test_y)
-    np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
-    np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
+    # np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
+    # np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()
