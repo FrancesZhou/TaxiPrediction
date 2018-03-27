@@ -55,14 +55,13 @@ class ModelSolver(object):
         #y_ = self.model.build_sampler()
 
         # train op
-        with tf.variable_scope(tf.get_variable_scope(), reuse=None):
-        #with tf.name_scope('optimizer'):
+        with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
             grads = tf.gradients(w_loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
             train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)
 
-        tf.get_variable_scope().reuse_variables()
+        #tf.get_variable_scope().reuse_variables()
         gpu_options = tf.GPUOptions(allow_growth=True)
         #y_ = self.model.build_sampler()
         # summary op
@@ -70,9 +69,13 @@ class ModelSolver(object):
         for var in tf.trainable_variables():
             tf.summary.histogram(var.op.name, var)
         for grad, var in grads_and_vars:
-            tf.summary.histogram(var.op.name+'/gradient', grad)
+            if grad is not None:
+                tf.summary.histogram(var.op.name+'/gradient', grad)
+            else:
+                tf.summary.histogram(var.op.name+'/gradient', tf.zeros([1], tf.int32))
 
         summary_op = tf.summary.merge_all()
+        tf.get_variable_scope().reuse_variables()
 
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             tf.global_variables_initializer().run()
