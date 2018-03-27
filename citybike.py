@@ -55,6 +55,8 @@ tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
+tf.app.flags.DEFINE_integer('pre_saved_cluster', 0,
+                            """if use saved cluster as annotation tensors""")
 tf.app.flags.DEFINE_integer('use_ae', 1,
                             """whether to use autoencoder to cluster""")
 tf.app.flags.DEFINE_string('ae_pretrain', None,
@@ -181,43 +183,51 @@ def main():
                 print('auto-encoder to cluster...')
                 model_path = 'citybike-results/model_save/AEAttConvLSTM/'
                 log_path = 'citybike-results/log/AEAttConvLSTM/'
-                ae = AutoEncoder(input_dim=input_dim, z_dim=[4, 4, 16],
-                                 layer={'encoder': ['conv', 'conv'],
-                                        'decoder': ['conv', 'conv']},
-                                 layer_param={'encoder': [[[3,3], [1,2,2,1], 8],
-                                                           [[3,3], [1,2,2,1], 16]],
-                                              'decoder': [[[3,3], [1,2,2,1], 8],
-                                                          [[3,3], [1,2,2,1], 2]]},
-                                 model_save_path=model_path,
-                                 batch_size=FLAGS.batch_size)
-                #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
-                train_z_data = ae.get_z(train_data)
-                train_z_data = np.array(train_z_data)
-                print train_z_data.shape
-                # k-means to cluster train_z_data
-                vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
-                kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
-                                tol=0.00000001).fit(vector_data)
-                cluster_centroid = kmeans.cluster_centers_
-                print np.array(cluster_centroid).shape
-                # reshape to [cluster_num, row, col, channel]
-                cluster_centroid = np.reshape(cluster_centroid,
-                                              (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
-                # decoder to original space
-                cluster_centroid = ae.get_y(cluster_centroid)
-                print cluster_centroid.shape
+                if FLAGS.pre_saved_cluster:
+                    cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
+                else:
+                    ae = AutoEncoder(input_dim=input_dim, z_dim=[4, 4, 16],
+                                     layer={'encoder': ['conv', 'conv'],
+                                            'decoder': ['conv', 'conv']},
+                                     layer_param={'encoder': [[[3,3], [1,2,2,1], 8],
+                                                               [[3,3], [1,2,2,1], 16]],
+                                                  'decoder': [[[3,3], [1,2,2,1], 8],
+                                                              [[3,3], [1,2,2,1], 2]]},
+                                     model_save_path=model_path,
+                                     batch_size=FLAGS.batch_size)
+                    #ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
+                    train_z_data = ae.get_z(train_data)
+                    train_z_data = np.array(train_z_data)
+                    print train_z_data.shape
+                    # k-means to cluster train_z_data
+                    vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
+                    kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
+                                    tol=0.00000001).fit(vector_data)
+                    cluster_centroid = kmeans.cluster_centers_
+                    print np.array(cluster_centroid).shape
+                    # reshape to [cluster_num, row, col, channel]
+                    cluster_centroid = np.reshape(cluster_centroid,
+                                                  (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
+                    # decoder to original space
+                    cluster_centroid = ae.get_y(cluster_centroid)
+                    print cluster_centroid.shape
+                    np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             else:
                 # k-means to cluster train_data
                 print('k-means to cluster...')
-                vector_data = np.reshape(train_data, (train_data.shape[0], -1))
-                #init_vectors = vector_data[:FLAGS.cluster_num, :]
-                #cluster_centroid = init_vectors
-                kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
-                cluster_centroid = kmeans.cluster_centers_
-                # reshape to [cluster_num, row, col, channel]
-                cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
                 model_path = 'citybike-results/model_save/AttConvLSTM/'
                 log_path = 'citybike-results/log/AttConvLSTM/'
+                if FLAGS.pre_saved_cluster:
+                    cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
+                else:
+                    vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+                    #init_vectors = vector_data[:FLAGS.cluster_num, :]
+                    #cluster_centroid = init_vectors
+                    kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
+                    cluster_centroid = kmeans.cluster_centers_
+                    # reshape to [cluster_num, row, col, channel]
+                    cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+                    np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             # build model
             print('build AttConvLSTM model...')
             model = AttConvLSTM(input_dim=input_dim, 
