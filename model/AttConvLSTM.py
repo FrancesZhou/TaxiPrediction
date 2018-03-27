@@ -176,11 +176,13 @@ class AttConvLSTM(object):
         # encoder
         state = self.encoder_state
         for t in range(self.input_steps):
-            _, state = self.encoder(x[:, t, :, :, :], state, reuse=(t!=0))
+            #_, state = self.encoder(x[:, t, :, :, :], state, reuse=(t!=0))
+            _, state = self.encoder(x[:, t, :, :, :], state, reuse=tf.AUTO_REUSE)
         state_2 = state
         y_ = []
         for t in range(self.output_steps):
-            out, state_2 = self.decoder(state_2, reuse=(t!=0))
+            #out, state_2 = self.decoder(state_2, reuse=(t!=0))
+            out, state_2 = self.decoder(state_2, reuse=tf.AUTO_REUSE)
             y_.append(out)
         y_ = tf.stack(y_)
         y_ = tf.transpose(y_, [1,0,2,3,4])
@@ -194,22 +196,4 @@ class AttConvLSTM(object):
         weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + \
                         self.reg_lambda * tf.nn.l2_loss(step_weight)
         return y_, loss, weighted_loss, step_weight
-
-    # def build_sampler(self):
-    # 	x = self.x
-    # 	y = self.y
-    # 	#batch_size = tf.shape(x)[0]
-    # 	state = self.encoder_state
-    # 	for t in range(self.input_steps):
-    # 		_, state = self.encoder(x[:, t, :, :, :], state)
-    # 	state_2 = state
-    # 	y_ = []
-    # 	for t in range(self.output_steps):
-    # 		out, state_2 = self.decoder(state_2)
-    # 		y_.append(out)
-    # 	y_ = tf.stack(y_)
-    # 	y_ = tf.transpose(y_, [1,0,2,3,4])
-    # 	loss = 2*tf.nn.l2_loss(y-y_[:,:,:,:,:])
-    # 	return y_, loss
-
 
