@@ -167,7 +167,7 @@ class AutoEncoder(object):
             for i in range(len(z_data)):
                 y_z = sess.run(y_, feed_dict={self.z: np.expand_dims(z_data[i], axis=0)})
                 y_data.append(y_z)
-        return np.array(y_data)
+        return np.squeeze(np.array(y_data))
 
 
 

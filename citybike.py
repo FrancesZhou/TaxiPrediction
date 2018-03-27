@@ -205,6 +205,7 @@ def main():
                                               (-1, train_z_data.shape[1], train_z_data.shape[2], train_z_data.shape[3]))
                 # decoder to original space
                 cluster_centroid = ae.get_y(cluster_centroid)
+                print cluster_centroid.shape
             else:
                 # k-means to cluster train_data
                 print('k-means to cluster...')
