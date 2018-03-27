@@ -55,7 +55,8 @@ class ModelSolver(object):
         #y_ = self.model.build_sampler()
 
         # train op
-        with tf.name_scope('optimizer'):
+        with tf.variable_scope(tf.get_variable_scope(), reuse=None):
+        #with tf.name_scope('optimizer'):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
             grads = tf.gradients(w_loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
