@@ -190,10 +190,10 @@ class AttConvLSTM(object):
         # return loss/tf.to_float(batch_size)
         # tf.sqrt(loss/tf.to_float(batch_size*seq_length*row*col*channel))
         #  weighted loss
-        step_weight = tf.get_variable('step_weight', [self.output_steps], initializer=self.const_initializer)
-        step_weight = tf.nn.softmax(step_weight)
-        square_loss = tf.reduce_mean(tf.square(y - y_), [0, 2, 3, 4])
-        weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + \
-                        self.reg_lambda * tf.nn.l2_loss(step_weight)
+        with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
+            step_weight = tf.get_variable('step_weight', [self.output_steps], initializer=self.const_initializer)
+            step_weight = tf.nn.softmax(step_weight)
+            square_loss = tf.reduce_mean(tf.square(y - y_), [0, 2, 3, 4])
+            weighted_loss = tf.reduce_sum(tf.multiply(square_loss, step_weight)) + self.reg_lambda * tf.nn.l2_loss(step_weight)
         return y_, loss, weighted_loss, step_weight
 
