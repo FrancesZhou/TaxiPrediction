@@ -191,9 +191,9 @@ def main():
                                                               [[3, 3], [1, 2, 2, 1], 2]]},
                                      model_save_path=model_path,
                                      batch_size=FLAGS.batch_size)
-                    ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
-                    train_z_data = ae.get_z(train_data)
-                    train_z_data = np.array(train_z_data)
+                    if FLAGS.ae_pretrain is None:
+                        ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
+                    train_z_data = ae.get_z(train_data, pretrained_model=FLAGS.ae_pretrain)
                     print train_z_data.shape
                     # k-means to cluster train_z_data
                     vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
@@ -206,7 +206,7 @@ def main():
                                                   (-1, train_z_data.shape[1], train_z_data.shape[2],
                                                    train_z_data.shape[3]))
                     # decoder to original space
-                    cluster_centroid = ae.get_y(cluster_centroid)
+                    cluster_centroid = ae.get_y(cluster_centroid, pretrained_model=FLAGS.ae_pretrain)
                     print cluster_centroid.shape
                     np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             else:
