@@ -12,6 +12,7 @@ sys.path.append('/home/zx/TaxiPrediction/model/')
 sys.path.append('./util/')
 sys.path.append('./data/')
 from ConvLSTM import *
+from autoencoder import *
 from AttConvLSTM import *
 from ResNet import *
 from preprocessing import *
@@ -39,7 +40,7 @@ tf.app.flags.DEFINE_integer('save_every', 1,
 # model: ConvLSTM, AttConvLSTM, ResNet
 tf.app.flags.DEFINE_string('model', 'ResNet',
                             """which model to train and test""")
-tf.app.flags.DEFINE_string('gpu', '0', """which gpu to use: 0 or 1""")
+tf.app.flags.DEFINE_integer('weighted_loss', 1, """if use weighted loss as loss function""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,
                             """num of closeness""")
@@ -50,13 +51,17 @@ tf.app.flags.DEFINE_integer('trend', 4,
 # AttConvLSTM
 tf.app.flags.DEFINE_integer('cluster_num', 128,
                             """num of cluster in attention mechanism""")
+tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
+                            """times for running kmeans to cluster""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 tf.app.flags.DEFINE_integer('pre_saved_cluster', 0,
                             """if use saved cluster as annotation tensors""")
 tf.app.flags.DEFINE_integer('use_ae', 1,
                             """whether to use autoencoder to cluster""")
-tf.app.flags.DEFINE_string('ae_pretrain', None,
+tf.app.flags.DEFINE_integer('ae_train', 1,
+                            """whether to train autoencoder""")
+tf.app.flags.DEFINE_string('ae_pretrained_model', None,
                            """pretrained_model for autoencoder""")
 # train/test
 tf.app.flags.DEFINE_integer('train', 1,
@@ -191,9 +196,9 @@ def main():
                                                               [[3, 3], [1, 2, 2, 1], 2]]},
                                      model_save_path=model_path,
                                      batch_size=FLAGS.batch_size)
-                    if FLAGS.ae_pretrain is None:
-                        ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
-                    train_z_data = ae.get_z(train_data, pretrained_model=FLAGS.ae_pretrain)
+                    if FLAGS.ae_train:
+                        ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrained_model)
+                    train_z_data = ae.get_z(train_data, pretrained_model=FLAGS.ae_pretrained_model)
                     print train_z_data.shape
                     # k-means to cluster train_z_data
                     vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
@@ -206,7 +211,7 @@ def main():
                                                   (-1, train_z_data.shape[1], train_z_data.shape[2],
                                                    train_z_data.shape[3]))
                     # decoder to original space
-                    cluster_centroid = ae.get_y(cluster_centroid, pretrained_model=FLAGS.ae_pretrain)
+                    cluster_centroid = ae.get_y(cluster_centroid, pretrained_model=FLAGS.ae_pretrained_model)
                     print cluster_centroid.shape
                     np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             else:

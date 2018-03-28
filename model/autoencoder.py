@@ -100,7 +100,7 @@ class AutoEncoder(object):
         # build model
         z, _, loss = self.build_model()
         # train op
-        with tf.name_scope('optimizer'):
+        with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
             grads = tf.gradients(loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
