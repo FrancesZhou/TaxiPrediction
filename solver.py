@@ -16,6 +16,7 @@ class ModelSolver(object):
         self.preprocessing = preprocessing
         self.cross_val = kwargs.pop('cross_val', False)
         self.cpt_ext = kwargs.pop('cpt_ext', False)
+        self.weighted_loss = kwargs.pop('weighted_loss', True)
         self.n_epochs = kwargs.pop('n_epochs', 10)
         self.batch_size = kwargs.pop('batch_size', 32)
         self.learning_rate = kwargs.pop('learning_rate', 0.000001)
@@ -57,7 +58,11 @@ class ModelSolver(object):
         # train op
         with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
-            grads = tf.gradients(w_loss, tf.trainable_variables())
+            if self.weighted_loss:
+                grad_loss = w_loss
+            else:
+                grad_loss = loss
+            grads = tf.gradients(grad_loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
             train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)
 

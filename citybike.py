@@ -19,28 +19,22 @@ from preprocessing import *
 from utils import *
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('gpu', '0',
-                            """which gpu to use: 0 or 1""")
+tf.app.flags.DEFINE_string('gpu', '0', """which gpu to use: 0 or 1""")
 
 tf.app.flags.DEFINE_integer('input_steps', 10,
                             """num of input_steps""")
 tf.app.flags.DEFINE_integer('output_steps', 10,
                             """num of output_steps""")
-tf.app.flags.DEFINE_integer('batch_size', 16,
-                            """batch size for training""")
-tf.app.flags.DEFINE_integer('n_epochs', 20,
-                            """num of epochs""")
-tf.app.flags.DEFINE_float('keep_prob', .9,
-                            """for dropout""")
-tf.app.flags.DEFINE_float('lr', .0002,
-                            """for dropout""")
-tf.app.flags.DEFINE_string('update_rule', 'adam',
-                            """update rule""")
+tf.app.flags.DEFINE_integer('batch_size', 16, """batch size for training""")
+tf.app.flags.DEFINE_integer('n_epochs', 20, """num of epochs""")
+tf.app.flags.DEFINE_float('keep_prob', .9, """for dropout""")
+tf.app.flags.DEFINE_float('lr', .0002, """for dropout""")
+tf.app.flags.DEFINE_string('update_rule', 'adam', """update rule""")
 tf.app.flags.DEFINE_integer('save_every', 1,
                             """steps to save""")
 # model: ConvLSTM, AttConvLSTM, ResNet
-tf.app.flags.DEFINE_string('model', 'ResNet',
-                            """which model to train and test""")
+tf.app.flags.DEFINE_string('model', 'ResNet', """which model to train and test""")
+tf.app.flags.DEFINE_integer('weighted_loss', 1, """is use weighted loss as loss function""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,
                             """num of closeness""")
@@ -50,8 +44,6 @@ tf.app.flags.DEFINE_integer('trend', 4,
                             """num of trend""")
 # AttConvLSTM
 tf.app.flags.DEFINE_integer('cluster_num', 128,
-                            """num of cluster in attention mechanism""")
-tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")

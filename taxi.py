@@ -3,6 +3,7 @@ import tensorflow as tf
 import sys
 from sklearn.cluster import KMeans
 from solver import ModelSolver
+import os
 # for mac debug
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
 sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
@@ -17,6 +18,7 @@ from preprocessing import *
 from utils import *
 
 FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_string('gpu', '0', """which gpu to use: 0 or 1""")
 
 tf.app.flags.DEFINE_integer('input_steps', 10,
                             """num of input_steps""")
@@ -37,6 +39,7 @@ tf.app.flags.DEFINE_integer('save_every', 1,
 # model: ConvLSTM, AttConvLSTM, ResNet
 tf.app.flags.DEFINE_string('model', 'ResNet',
                             """which model to train and test""")
+tf.app.flags.DEFINE_string('gpu', '0', """which gpu to use: 0 or 1""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,
                             """num of closeness""")
@@ -47,12 +50,24 @@ tf.app.flags.DEFINE_integer('trend', 4,
 # AttConvLSTM
 tf.app.flags.DEFINE_integer('cluster_num', 128,
                             """num of cluster in attention mechanism""")
-tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
-                            """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
+tf.app.flags.DEFINE_integer('pre_saved_cluster', 0,
+                            """if use saved cluster as annotation tensors""")
+tf.app.flags.DEFINE_integer('use_ae', 1,
+                            """whether to use autoencoder to cluster""")
+tf.app.flags.DEFINE_string('ae_pretrain', None,
+                           """pretrained_model for autoencoder""")
+# train/test
+tf.app.flags.DEFINE_integer('train', 1,
+                            """whether to train""")
+tf.app.flags.DEFINE_integer('test', 0,
+                            """whether to test""")
+tf.app.flags.DEFINE_string('pretrained_model', None,
+                           """pretrained_model_name""")
 
 def main():
+    os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
     # preprocessing class
     pre_process = MinMaxNormalization01()
     print('load train, validate, test data...')
@@ -158,16 +173,60 @@ def main():
                 pretrained_model=None, model_path='taxi-results/model_save/ConvLSTM/', 
                 test_model='taxi-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-results/log/ConvLSTM/')
         elif FLAGS.model=='AttConvLSTM':
-            # k-means to cluster train_data
             # train_data: [num, row, col, channel]
-            print('k-means to cluster...')
-            vector_data = np.reshape(train_data, (train_data.shape[0], -1))
-            #init_vectors = vector_data[:FLAGS.cluster_num, :]
-    	    #cluster_centroid = init_vectors
-            kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num, tol=0.00000001).fit(vector_data)
-            cluster_centroid = kmeans.cluster_centers_
-            # reshape to [cluster_num, row, col, channel]
-            cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+            if FLAGS.use_ae:
+                # auto-encoder to cluster train_data
+                print('auto-encoder to cluster...')
+                model_path = 'taxi-results/model_save/AEAttConvLSTM/'
+                log_path = 'taxi-results/log/AEAttConvLSTM/'
+                if FLAGS.pre_saved_cluster:
+                    cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
+                else:
+                    ae = AutoEncoder(input_dim=input_dim, z_dim=[16, 16, 16],
+                                     layer={'encoder': ['conv', 'conv'],
+                                            'decoder': ['conv', 'conv']},
+                                     layer_param={'encoder': [[[3, 3], [1, 2, 2, 1], 8],
+                                                              [[3, 3], [1, 2, 2, 1], 16]],
+                                                  'decoder': [[[3, 3], [1, 2, 2, 1], 8],
+                                                              [[3, 3], [1, 2, 2, 1], 2]]},
+                                     model_save_path=model_path,
+                                     batch_size=FLAGS.batch_size)
+                    ae.train(train_data, batch_size=FLAGS.batch_size, learning_rate=FLAGS.lr, n_epochs=20, pretrained_model=FLAGS.ae_pretrain)
+                    train_z_data = ae.get_z(train_data)
+                    train_z_data = np.array(train_z_data)
+                    print train_z_data.shape
+                    # k-means to cluster train_z_data
+                    vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
+                    kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
+                                    tol=0.00000001).fit(vector_data)
+                    cluster_centroid = kmeans.cluster_centers_
+                    print np.array(cluster_centroid).shape
+                    # reshape to [cluster_num, row, col, channel]
+                    cluster_centroid = np.reshape(cluster_centroid,
+                                                  (-1, train_z_data.shape[1], train_z_data.shape[2],
+                                                   train_z_data.shape[3]))
+                    # decoder to original space
+                    cluster_centroid = ae.get_y(cluster_centroid)
+                    print cluster_centroid.shape
+                    np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
+            else:
+                # k-means to cluster train_data
+                print('k-means to cluster...')
+                model_path = 'taxi-results/model_save/AttConvLSTM/'
+                log_path = 'taxi-results/log/AttConvLSTM/'
+                if FLAGS.pre_saved_cluster:
+                    cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
+                else:
+                    vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+                    # init_vectors = vector_data[:FLAGS.cluster_num, :]
+                    # cluster_centroid = init_vectors
+                    kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
+                                    tol=0.00000001).fit(vector_data)
+                    cluster_centroid = kmeans.cluster_centers_
+                    # reshape to [cluster_num, row, col, channel]
+                    cluster_centroid = np.reshape(cluster_centroid,
+                                                  (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+                    np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             # build model
             print('build AttConvLSTM model...')
             model = AttConvLSTM(input_dim=input_dim, 
@@ -193,15 +252,19 @@ def main():
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=None, model_path='taxi-results/model_save/AttConvLSTM/', 
-                test_model='taxi-results/model_save/AttConvLSTM/model-'+str(FLAGS.n_epochs), log_path='taxi-results/log/AttConvLSTM/')
-        print('begin training...')
-        test_prediction, _ = solver.train(test)
-        test_target = np.asarray(test_y)
-        #print('test trained model...')
-        #solver.test(test)
-    np.save('taxi-results/results/'+FLAGS.model+'/test_target.npy', test_target)
-    np.save('taxi-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
+                pretrained_model=FLAGS.pretrained_model, model_path=model_path,
+                test_model=model_path + 'model-'+str(FLAGS.n_epochs), log_path=log_path)
+        if FLAGS.train:
+            print('begin training...')
+            test_prediction, _ = solver.train(test)
+            test_target = np.asarray(test_y)
+        if FLAGS.test:
+            print('test trained model...')
+            solver.test_model = solver.model_path + FLAGS.pretrained_model
+            test_prediction = solver.test(test)
+            test_target = np.asarray(test_y)
+    #np.save('taxi-results/results/'+FLAGS.model+'/test_target.npy', test_target)
+    #np.save('taxi-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()

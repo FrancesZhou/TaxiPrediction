@@ -125,7 +125,7 @@ class AutoEncoder(object):
                 mean_loss = curr_loss/data.shape[0]
                 print 'at epoch %d, train loss is %f' % (epoch_i, mean_loss)
                 # save model
-                save_name = model_save_path + 'ae'
+                save_name = self.model_path + 'ae'
                 saver.save(sess, save_name, global_step=epoch_i+1)
 
     def get_z(self, data, pretrained_model=None):
