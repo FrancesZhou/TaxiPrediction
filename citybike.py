@@ -193,6 +193,8 @@ def main():
                     print train_z_data.shape
                     # k-means to cluster train_z_data
                     vector_data = np.reshape(train_z_data, (train_z_data.shape[0], -1))
+                    # save vector data to visualize
+                    np.save(model_path + 'vector_data.npy', vector_data)
                     kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
                                     tol=0.00000001).fit(vector_data)
                     cluster_centroid = kmeans.cluster_centers_
