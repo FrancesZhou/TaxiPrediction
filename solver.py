@@ -89,6 +89,7 @@ class ModelSolver(object):
             #curr_loss = 0
             start_t = time.time()
             for e in range(self.n_epochs):
+                # =============================== train ===================================
                 curr_loss = 0
                 # cross validation
                 if self.cross_val:

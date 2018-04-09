@@ -15,6 +15,7 @@ from ConvLSTM import *
 from autoencoder import *
 from AttConvLSTM import *
 from ResNet import *
+from AttResNet import *
 from preprocessing import *
 from utils import *
 
@@ -51,9 +52,9 @@ tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 tf.app.flags.DEFINE_integer('pre_saved_cluster', 0,
                             """if use saved cluster as annotation tensors""")
-tf.app.flags.DEFINE_integer('use_ae', 1,
+tf.app.flags.DEFINE_integer('use_ae', 0,
                             """whether to use autoencoder to cluster""")
-tf.app.flags.DEFINE_integer('ae_train', 1,
+tf.app.flags.DEFINE_integer('ae_train', 0,
                             """whether to train autoencoder""")
 tf.app.flags.DEFINE_string('ae_pretrained_model', None,
                            """pretrained_model for autoencoder""")
@@ -76,7 +77,7 @@ def main():
     print('preprocess train data...')
     pre_process.fit(train_data)
     
-    if FLAGS.model=='ResNet':
+    if 'ResNet' in FLAGS.model:
         pre_index = max(FLAGS.closeness*1, FLAGS.period*7, FLAGS.trend*7*24)
         all_timestamps = gen_timestamps(['2013','2014','2015','2016'])
         all_timestamps = all_timestamps[4344:-4416]
@@ -102,21 +103,57 @@ def main():
         nb_flow = train_data.shape[-1]
         row = train_data.shape[1]
         col = train_data.shape[2]
-        print('build ResNet model...')
-        model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
-            [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size, 
-            layer=['conv', 'res_net', 'conv'],
-            layer_param = [ [[3,3], [1,1,1,1], 64],
-            [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
-            [[3,3], [1,1,1,1], 2] ])
+        if FLAGS.model == 'AttResNet':
+            print('k-means to cluster...')
+            model_path = 'citybike-results/model_save/AttResNet/'
+            log_path = 'citybike-results/log/AttResNet/'
+            if FLAGS.pre_saved_cluster:
+                cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
+            else:
+                vector_data = np.reshape(train_data, (train_data.shape[0], -1))
+                # init_vectors = vector_data[:FLAGS.cluster_num, :]
+                # cluster_centroid = init_vectors
+                kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
+                                tol=0.00000001).fit(vector_data)
+                cluster_centroid = kmeans.cluster_centers_
+                # reshape to [cluster_num, row, col, channel]
+                cluster_centroid = np.reshape(cluster_centroid,
+                                              (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
+                if not os.path.exists(model_path):
+                    os.makedirs(model_path)
+                if not os.path.exists(log_path):
+                    os.makedirs(log_path)
+                np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
+            print('build AttResNet model...')
+            model = AttResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
+                                          [FLAGS.trend, nb_flow, row, col], [8]],
+                              att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes,
+                              att_layer=['conv', 'conv'],
+                              att_layer_param=[ [[3,3], [1,1,1,1], 8], [[3,3], [1,1,1,1], 16] ],
+                              batch_size=FLAGS.batch_size,
+                              layer=['conv', 'res_net', 'conv'],
+                              layer_param=[[[3, 3], [1, 1, 1, 1], 64],
+                                           [3, [[[3, 3], [1, 1, 1, 1], 64], [[3, 3], [1, 1, 1, 1], 64]]],
+                                           [[3, 3], [1, 1, 1, 1], 2]]
+                              )
+        else:
+            print('build ResNet model...')
+            model_path = 'citybike-results/model_save/ResNet/'
+            log_path = 'citybike-results/log/ResNet/'
+            model = ResNet(input_conf=[[FLAGS.closeness,nb_flow,row,col],[FLAGS.period,nb_flow,row,col],
+                [FLAGS.trend,nb_flow,row,col],[8]], batch_size=FLAGS.batch_size,
+                layer=['conv', 'res_net', 'conv'],
+                layer_param = [ [[3,3], [1,1,1,1], 64],
+                [ 3, [ [[3,3], [1,1,1,1], 64], [[3,3], [1,1,1,1], 64] ] ],
+                [[3,3], [1,1,1,1], 2] ])
         print('model solver...')
         solver = ModelSolver(model, train, val, preprocessing=pre_process,
                 n_epochs=FLAGS.n_epochs, 
                 batch_size=FLAGS.batch_size, 
                 update_rule=FLAGS.update_rule,
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
-                pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/ResNet/',
-                test_model='citybike-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/ResNet/', 
+                pretrained_model=FLAGS.pretrained_model, model_path=model_path,
+                test_model='citybike-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path=log_path,
                 cross_val=False, cpt_ext=True)
         print('begin training...')
         test_n = {'data': test_data, 'timestamps': test_timestamps}
@@ -215,6 +252,10 @@ def main():
                 print('k-means to cluster...')
                 model_path = 'citybike-results/model_save/AttConvLSTM/'
                 log_path = 'citybike-results/log/AttConvLSTM/'
+                if not os.path.exists(model_path):
+                    os.makedirs(model_path)
+                if not os.path.exists(log_path):
+                    os.makedirs(log_path)
                 if FLAGS.pre_saved_cluster:
                     cluster_centroid = np.load(model_path + 'cluster_centroid.npy')
                 else:
