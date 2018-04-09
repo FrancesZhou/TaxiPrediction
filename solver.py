@@ -44,17 +44,13 @@ class ModelSolver(object):
         raw_y = y = self.data['y']
         x_val = self.val_data['x']
         y_val = self.val_data['y']
-        # x = np.asarray(self.data['x'])
-        # y = np.asarray(self.data['y'])
-        # x_val = np.asarray(self.val_data['x'])
-        # y_val = np.asarray(self.val_data['y'])
-        #print('shape of x: '+x.shape())
         # build graphs
-        #y_, loss, w_loss, s_weight = self.model.build_model()
-        y_, loss = self.model.build_model()
+        if self.weighted_loss:
+            y_, loss, w_loss, s_weight = self.model.build_model()
+        else:
+            y_, loss = self.model.build_model()
 
         #tf.get_variable_scope().reuse_variables()
-        #y_ = self.model.build_sampler()
 
         # train op
         with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
@@ -69,7 +65,6 @@ class ModelSolver(object):
 
         #tf.get_variable_scope().reuse_variables()
         gpu_options = tf.GPUOptions(allow_growth=True)
-        #y_ = self.model.build_sampler()
         # summary op
         tf.summary.scalar('batch_loss', loss)
         for var in tf.trainable_variables():
@@ -91,7 +86,6 @@ class ModelSolver(object):
                 print "Start training with pretrained model..."
                 pretrained_model_path = self.model_path + self.pretrained_model
                 saver.restore(sess, pretrained_model_path)
-
             #curr_loss = 0
             start_t = time.time()
             for e in range(self.n_epochs):
@@ -99,14 +93,8 @@ class ModelSolver(object):
                 # cross validation
                 if self.cross_val:
                     x, x_val, y, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
-                    #print(np.array(x).shape)
                 for i in range(len(x)):
                     if self.cpt_ext:
-                        #print(x[i][0].shape)
-                        #print(x[i][1].shape)
-                        #print(x[i][2].shape)
-                        #print(x[i][3].shape)
-                        #print(np.array(y[i]).shape)
                         feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]),
                                     self.model.x_ext: np.array(x[i][3]),
                                     self.model.y: np.array(y[i])}
@@ -114,20 +102,16 @@ class ModelSolver(object):
                         feed_dict = {self.model.x: np.array(x[i]), self.model.y: np.array(y[i])}
                     _, l = sess.run([train_op, loss], feed_dict)
                     curr_loss += l
-
                     # write summary for tensorboard visualization
                     if i%100 == 0:
                         print("at epoch "+str(e)+', '+str(i))
                         summary = sess.run(summary_op, feed_dict)
                         summary_writer.add_summary(summary, e*len(x) + i)
-                #print(np.array(y).shape)
-                #compute counts of all regions
+                # compute counts of all regions
                 t_count = 0
                 for c in range(len(y)):
-                    #print(np.array(y[c]).shape)
                     t_count += np.prod(np.array(y[c]).shape)
                 t_rmse = np.sqrt(curr_loss/t_count)
-                #t_rmse = np.sqrt(curr_loss/(np.prod(np.array(y).shape)))
                 print("at epoch " + str(e) + ", train loss is " + str(curr_loss) + ' , ' + str(t_rmse) + ' , ' + str(self.preprocessing.real_loss(t_rmse)))
                 # ================================= validate =================================
                 val_loss = 0
@@ -145,10 +129,8 @@ class ModelSolver(object):
                 print(np.array(y_val).shape)
                 v_count = 0
                 for v in range(len(y_val)):
-                    #print(np.array(y_val[v]).shape)
                     v_count += np.prod(np.array(y_val[v]).shape)
                 rmse = np.sqrt(val_loss/v_count)
-                #rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
                 print("at epoch " + str(e) + ", validate loss is " + str(val_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
                 print "elapsed time: ", time.time() - start_t
                 if (e+1)%self.save_every == 0:
@@ -176,17 +158,15 @@ class ModelSolver(object):
             print(np.array(y_test).shape)
             t_count = 0
             for t in range(len(y_test)):
-                #print(np.array(y_val[v]).shape)
                 t_count += np.prod(np.array(y_test[t]).shape)
             print('t_count = '+str(t_count))
             rmse = np.sqrt(t_loss/t_count)
-            #rmse = np.sqrt(val_loss/(np.prod(np.array(y_val).shape)))
-            #y_pre_test = np.asarray(y_pre_test)
             print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
-            # ----- weight -----
-            step_weight = sess.run(s_weight, feed_dict=feed_dict)
-            print 'step_weight: '
-            print step_weight
+            # ----- weighted_loss -----
+            if self.weighted_loss:
+                step_weight = sess.run(s_weight, feed_dict=feed_dict)
+                print 'step_weight: '
+                print step_weight
             # ============================= for test 1_to_n ==============================
             y_pre_test_n = []
             if self.cpt_ext:
@@ -205,29 +185,19 @@ class ModelSolver(object):
                 depends = [ [c*j for j in range(1, close+1)],
                             [p*j for j in range(1, period+1)],
                             [t*j for j in range(1, trend+1)] ]
-                #start_t = time.time()
                 t_loss = 0
-                # for loo in range(n):
                 i = pre_index
-                #y_pre_test_n = []
-                #while i<pre_index+3:
                 y_pre_test_n = np.zeros([len(seq)-n-pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3], self.model.input_conf[0][1]])
                 while i<len(seq)-n:
                     # seq_i : pre_index+n
                     if i%100 == 0:
                         print("test_1_to_n at i = "+str(i))
                     seq_i = np.copy(seq[i-pre_index: i+n])
-                    #seq_i = np.copy(seq)
-                    #print(seq_i.shape)
                     time_i = timestamps[i-pre_index: i+n]
                     for n_i in range(n):
-                        #x, _ = batch_data_cpt_ext(data=seq_i[n_i: n_i+pre_index+1], timestamps=time_i[n_i: n_i+pre_index+1],
-                        #					batch_size=1, close=close, period=period, trend=trend)
                         x = []
                         for d in range(len(depends)):
-                            #x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
                             x_d = np.transpose(np.vstack(np.transpose(seq_i[n_i+pre_index-np.array(depends[d]), :, :, :],[0,3,1,2])), [1,2,0])
-                            #print(x_d.shape)
                             x_d = np.expand_dims(x_d, axis=0)
                             x.append(x_d)
                         ext_i = time.strptime(time_i[n_i+pre_index][:8], '%Y%m%d').tm_wday
@@ -239,38 +209,26 @@ class ModelSolver(object):
                             v.append(1)
                         v = np.expand_dims(np.asarray(v), axis=0)
                         x.append(np.asarray(v))
-                        #print(x[0].shape)
                         y = np.expand_dims(seq[i+n_i], axis=0)
-                        #feed_dict = {self.model.x_c: np.array(x[0][0]), self.model.x_p: np.array(x[0][1]), self.model.x_t: np.array(x[0][2]),
-                        #			self.model.x_ext: np.array(x[0][3]),
-                        #			self.model.y: np.array(y)}
                         feed_dict = {self.model.x_c: np.array(x[0]), self.model.x_p: np.array(x[1]), self.model.x_t: np.array(x[2]),
                                     self.model.x_ext: np.array(x[3]),
                                     self.model.y: np.array(y)}
                         y_p, l = sess.run([y_, loss], feed_dict=feed_dict)
-                        #l = np.sum(np.square(y_p-y))
-                        #print(l)
                         seq_i[n_i+pre_index] = y_p
                         t_loss += l
-                    #y_pred_all.append(seq_i[pre_index:])
-                    #t_loss += loss_i
                     y_pre_test_n[i-pre_index] = seq_i[pre_index:]
                     i += 1
-                    #y_pre_test_n.append(seq_i[pre_index:])
                 row, col, flow = np.array(seq).shape[1:]
                 print(row,col,flow)
                 test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
-                #test_count = ((len(seq)-pre_index-n)/n)*n*(row*col*flow)
                 print(test_count)
                 rmse = np.sqrt(t_loss/test_count)
-                #y_pre_test_n = np.asarray(y_pre_test_n)
                 print("test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
             y_pre_test = np.asarray(y_pre_test)
             y_pre_test_n = np.asarray(y_pre_test_n)
             return y_pre_test, y_pre_test_n
 
     def test(self, data):
-        #def test(self, data, save_outputs=True):
         x = data['x']
         y = data['y']
         # build graphs
