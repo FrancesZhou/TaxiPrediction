@@ -98,22 +98,20 @@ class AttResNet(object):
             # attention and hidden state
             # y: [cluster_num, 16, 16, 16]
             # att: [cluster_num, att_num]
-            att = tf.reshape(y, [y.get_shape().as_list()[0], -1])
+            y_shape = y.get_shape().as_list()
+            att = tf.reshape(y, [y_shape[0], -1])
             # att_shape: [cluster_num, att_num]
             att_shape = att.get_shape().as_list()
-            #print('att_shape: ', att_shape)
             # h: [batch_size, row, col, channel] -> [batch_size, h_num]
             #h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
             h = tf.reshape(state, [-1, np.prod(state.get_shape().as_list()[1:])])
             # h_shape: [batch_size, h_num]
             h_shape = h.get_shape().as_list()
-            h_shape[0] = self.batch_size
-            #print('h_shape: ', h_shape)
-            # att: [batch_size, cluster_num, att_num]
-            att = tf.tile(tf.expand_dims(att,0), [h_shape[0], 1, 1])
 
             h_num = h_shape[1]
             att_num = att_shape[1]
+            # att: [cluster_num, att_num]
+            # h: [batch_size, h_num]
             with tf.variable_scope('att_hidden'):
                 with tf.variable_scope('hidden'):
                     w = tf.get_variable('w', [h_num, self.att_nodes], initializer=self.weight_initializer)
@@ -121,21 +119,27 @@ class AttResNet(object):
                     h_att = tf.matmul(h, w)
                 with tf.variable_scope('att'):
                     w = tf.get_variable('w', [att_num, self.att_nodes], initializer=self.weight_initializer)
-                    # att_proj : [batch_size*cluster_num, att_nodes]
-                    att_proj = tf.matmul(tf.reshape(att,[-1,att_num]), w)
-                    # att_proj : [batch_size, cluster_num, att_nodes]
-                    att_proj = tf.reshape(att_proj, [-1, att_shape[0], self.att_nodes])
+                    # att_proj : [cluster_num, att_nodes]
+                    att_proj = tf.matmul(att, w)
                 b = tf.get_variable('b', [self.att_nodes], initializer=self.const_initializer)
-                att_h_plus = tf.nn.relu(att_proj + tf.expand_dims(h_att, 1) + b)
+                # [batch_size, cluster_num, att_nodes]
+                # att_proj: [cluster_num, att_nodes]
+                # tf.tile(tf.expand_dims(h_att, 1), [1, att_shape[0], 1]) -> [batch_size, cluster_num, att_nodes]
+                att_h_plus = tf.nn.relu(att_proj + tf.tile(tf.expand_dims(h_att, 1), [1, att_shape[0], 1]) + b)
+                #att_h_plus = tf.nn.relu(att_proj + tf.expand_dims(h_att, 1) + b)
+                # att_h_plus: [batch_size, cluster_num, att_nodes]
                 w_att = tf.get_variable('w_att', [self.att_nodes, 1], initializer=self.weight_initializer)
                 out_att = tf.reshape(tf.matmul(tf.reshape(att_h_plus, [-1, self.att_nodes]), w_att), [-1, att_shape[0]])
                 # out_att: [batch_size, cluster_num]
                 alpha = tf.nn.softmax(out_att)
+                # att: [cluster_num, att_num]
                 # context: [batch_size, att_num]
-                context = tf.reduce_sum(att * tf.expand_dims(alpha, 2), 1, name='context')
-                out_shape = y.get_shape().as_list()
-                out_shape[0] = h_shape[0]
-                att_context = tf.reshape(context, out_shape)
+                context = tf.reduce_sum(att * tf.tile(tf.expand_dims(alpha, -1), [1, 1, att_num]), 1, name='context')
+                att_context = tf.reshape(context, [-1, y_shape[1], y_shape[2], y_shape[3]])
+                #context = tf.reduce_sum(att * tf.expand_dims(alpha, 2), 1, name='context')
+                #out_shape = y.get_shape().as_list()
+                #out_shape[0] = h_shape[0]
+                #att_context = tf.reshape(context, out_shape)
                 return att_context, alpha
 
     def build_model(self):
