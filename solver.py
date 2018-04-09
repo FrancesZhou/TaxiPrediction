@@ -119,7 +119,7 @@ class ModelSolver(object):
                         print("at epoch "+str(e)+', '+str(i))
                         summary = sess.run(summary_op, feed_dict)
                         summary_writer.add_summary(summary, e*len(x) + i)
-                print(np.array(y).shape)
+                #print(np.array(y).shape)
                 #compute counts of all regions
                 t_count = 0
                 for c in range(len(y)):
