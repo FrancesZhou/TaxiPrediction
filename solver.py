@@ -16,7 +16,7 @@ class ModelSolver(object):
         self.preprocessing = preprocessing
         self.cross_val = kwargs.pop('cross_val', False)
         self.cpt_ext = kwargs.pop('cpt_ext', False)
-        self.weighted_loss = kwargs.pop('weighted_loss', True)
+        self.weighted_loss = kwargs.pop('weighted_loss', False)
         self.n_epochs = kwargs.pop('n_epochs', 10)
         self.batch_size = kwargs.pop('batch_size', 32)
         self.learning_rate = kwargs.pop('learning_rate', 0.000001)
@@ -50,7 +50,8 @@ class ModelSolver(object):
         # y_val = np.asarray(self.val_data['y'])
         #print('shape of x: '+x.shape())
         # build graphs
-        y_, loss, w_loss, s_weight = self.model.build_model()
+        #y_, loss, w_loss, s_weight = self.model.build_model()
+        y_, loss = self.model.build_model()
 
         #tf.get_variable_scope().reuse_variables()
         #y_ = self.model.build_sampler()

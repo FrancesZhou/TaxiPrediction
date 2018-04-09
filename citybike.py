@@ -34,7 +34,7 @@ tf.app.flags.DEFINE_integer('save_every', 1,
                             """steps to save""")
 # model: ConvLSTM, AttConvLSTM, ResNet
 tf.app.flags.DEFINE_string('model', 'ResNet', """which model to train and test""")
-tf.app.flags.DEFINE_integer('weighted_loss', 1, """is use weighted loss as loss function""")
+tf.app.flags.DEFINE_integer('weighted_loss', 0, """is use weighted loss as loss function""")
 # ResNet
 tf.app.flags.DEFINE_integer('closeness', 3,
                             """num of closeness""")
