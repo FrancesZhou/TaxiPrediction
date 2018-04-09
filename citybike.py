@@ -129,7 +129,7 @@ def main():
                                           [FLAGS.trend, nb_flow, row, col], [8]],
                               att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes,
                               att_layer=['conv', 'conv'],
-                              att_layer_param=[ [[3,3], [1,1,1,1], 8], [[3,3], [1,1,1,1], 16] ],
+                              att_layer_param=[ [[3,3], [1,1,1,1], 8], [[3,3], [1,1,1,1], 2] ],
                               batch_size=FLAGS.batch_size,
                               layer=['conv', 'res_net', 'conv'],
                               layer_param=[[[3, 3], [1, 1, 1, 1], 64],

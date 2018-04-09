@@ -1,5 +1,6 @@
 from __future__ import division
 
+import numpy as np
 import tensorflow as tf
 import BasicConvLSTMCell
 
@@ -86,6 +87,9 @@ class AttResNet(object):
         param = self.att_layer_param
         # att_inputs: [cluster_num, row, col, channel]
         y = tf.convert_to_tensor(self.att_inputs, dtype=tf.float32)
+        state = tf.convert_to_tensor(state, dtype=tf.float32)
+        #print 'state shape:'
+        #print state.get_shape().as_list()
         #h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
         with tf.variable_scope('attention'):
             for i in range(len(layer)):
@@ -99,9 +103,11 @@ class AttResNet(object):
             att_shape = att.get_shape().as_list()
             #print('att_shape: ', att_shape)
             # h: [batch_size, row, col, channel] -> [batch_size, h_num]
-            h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
+            #h = tf.reshape(state, [state.get_shape().as_list()[0], -1])
+            h = tf.reshape(state, [-1, np.prod(state.get_shape().as_list()[1:])])
             # h_shape: [batch_size, h_num]
             h_shape = h.get_shape().as_list()
+            h_shape[0] = self.batch_size
             #print('h_shape: ', h_shape)
             # att: [batch_size, cluster_num, att_num]
             att = tf.tile(tf.expand_dims(att,0), [h_shape[0], 1, 1])
@@ -155,7 +161,7 @@ class AttResNet(object):
             y_all.append(y_)
             # add attention
             if i == 0:
-                y_ctx = self.attention_layer(y_)
+                y_ctx, _ = self.attention_layer(y_)
                 y_ctx = self.fusion(y_ctx, idx=0.1)
                 y_all.append(y_ctx)
         # sum fusion
