@@ -104,7 +104,7 @@ class ModelSolver(object):
                     _, l = sess.run([train_op, loss], feed_dict)
                     curr_loss += l
                     # write summary for tensorboard visualization
-                    if i%100 == 0:
+                    if i%500 == 0:
                         print("at epoch "+str(e)+', '+str(i))
                         summary = sess.run(summary_op, feed_dict)
                         summary_writer.add_summary(summary, e*len(x) + i)
@@ -191,7 +191,7 @@ class ModelSolver(object):
                 y_pre_test_n = np.zeros([len(seq)-n-pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3], self.model.input_conf[0][1]])
                 while i<len(seq)-n:
                     # seq_i : pre_index+n
-                    if i%100 == 0:
+                    if i%500 == 0:
                         print("test_1_to_n at i = "+str(i))
                     seq_i = np.copy(seq[i-pre_index: i+n])
                     time_i = timestamps[i-pre_index: i+n]
