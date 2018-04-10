@@ -14,6 +14,7 @@ sys.path.append('./data/')
 from ConvLSTM import *
 from autoencoder import *
 from AttConvLSTM import *
+from MultiAttConvLSTM import *
 from ResNet import *
 from AttResNet import *
 from preprocessing import *
@@ -270,25 +271,40 @@ def main():
             # build model
             print 'build ' + FLAGS.model + ' model...'
             if FLAGS.model == 'AttConvLSTM':
-                model_name = AttConvLSTM
-            else:
-                model_name = MultiAttConvLSTM
-            model = model_name(input_dim=input_dim,
-                att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes, 
-                batch_size=FLAGS.batch_size, 
-                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
+                model = AttConvLSTM(input_dim=input_dim,
+                att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes,
+                batch_size=FLAGS.batch_size,
+                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'],
                 'decoder': ['conv_lstm', 'conv_lstm', 'conv', 'conv'],
-                'attention': ['conv', 'conv']}, 
-                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8], 
-                [[3,3], [1,1,1,1], 16], 
-                [[16,16], [3,3], 64], 
+                'attention': ['conv', 'conv']},
+                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8],
+                [[3,3], [1,1,1,1], 16],
+                [[16,16], [3,3], 64],
                 [[16,16], [3,3], 64] ],
-                'decoder': [ [[16,16], [3,3], 64], 
-                [[16,16], [3,3], 64], 
-                [[3,3], [1,1,1,1], 8], 
+                'decoder': [ [[16,16], [3,3], 64],
+                [[16,16], [3,3], 64],
+                [[3,3], [1,1,1,1], 8],
                 [[3,3], [1,1,1,1], 2] ],
-                'attention': [ [[3,3], [1,1,1,1], 8], 
-                [[3,3], [1,1,1,1], 16] ]}, 
+                'attention': [ [[3,3], [1,1,1,1], 8],
+                [[3,3], [1,1,1,1], 16] ]},
+                input_steps=10, output_steps=10)
+            elif FLAGS.model == 'MultiConvLSTM':
+                model = MultiAttConvLSTM(input_dim=input_dim,
+                att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes,
+                batch_size=FLAGS.batch_size,
+                layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'],
+                'decoder': ['conv_lstm', 'conv_lstm', 'conv', 'conv'],
+                'attention': ['conv', 'conv']},
+                layer_param={'encoder': [ [[3,3], [1,1,1,1], 8],
+                [[3,3], [1,1,1,1], 16],
+                [[16,16], [3,3], 64],
+                [[16,16], [3,3], 64] ],
+                'decoder': [ [[16,16], [3,3], 64],
+                [[16,16], [3,3], 64],
+                [[3,3], [1,1,1,1], 8],
+                [[3,3], [1,1,1,1], 2] ],
+                'attention': [ [[3,3], [1,1,1,1], 8],
+                [[3,3], [1,1,1,1], 16] ]},
                 input_steps=10, output_steps=10)
             print('model solver...')
             solver = ModelSolver(model, train, val, preprocessing=pre_process,
