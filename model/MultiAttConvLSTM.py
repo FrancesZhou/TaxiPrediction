@@ -1,9 +1,10 @@
 from __future__ import division
 
+import numpy as np
 import tensorflow as tf
 import BasicConvLSTMCell
 
-class AttConvLSTM(object):
+class MultiAttConvLSTM(object):
     def __init__(self, input_dim=[64,64,2],
                  att_inputs=[], att_nodes=1024,
                  batch_size=32,
@@ -44,6 +45,8 @@ class AttConvLSTM(object):
                 self.encoder_conv_lstm.append(convLSTM)
                 self.encoder_state.append(convLSTM.zero_state(self.batch_size))
         #self.init_state_encoder_conv_lstm = self.encoder_conv_lstm[0].zero_state(self.batch_size)
+
+        #self.encoder_h_state = []
 
         self.decoder_conv_lstm = []
         self.decoder_state = []
@@ -102,7 +105,7 @@ class AttConvLSTM(object):
                     conv_lstm_index += 1
         return y, state
 
-    def attention_layer(self, state, reuse=True):
+    def global_attention_layer(self, state, reuse=True):
         layer = self.att_layer
         param = self.att_layer_param
         # att_inputs: [cluster_num, row, col, channel]
@@ -151,16 +154,56 @@ class AttConvLSTM(object):
                 out_shape = y.get_shape().as_list()
                 out_shape[0] = h_shape[0]
                 att_context = tf.reshape(context, out_shape)
+                # att_context: [batch_size, 16, 16, 16]
                 return att_context, alpha
 
-    def decoder(self, init_state, reuse=True):
+    def temporal_attention_layer(self, state, encoder_h_states, reuse=True):
+        # state: [batch_size, row, col, channel]
+        # encoder_h_state: [batch_size, input_steps, row, col, channel]
+        h_shape = state.get_shape().as_list()
+        encoder_state_shape = encoder_h_states.get_shape().as_list()
+        h_dim = np.prod(h_shape[1:])
+        encoder_state_dim = np.prod(encoder_state_shape[2:])
+        # flatten_h: [batch_size, h_dim]
+        # flatten_encoder_states: [batch_size, input_steps, encoder_state_dim]
+        flatten_h = tf.reshape(state, [-1, h_dim])
+        flatten_encoder_states = tf.reshape(encoder_h_states, [-1, encoder_state_shape[1], encoder_state_dim])
+        with tf.variable_scope('att_encoder_hidden', reuse=reuse):
+            with tf.variable_scope('hidden', reuse=reuse):
+                # flatten_h: [batch_size, h_dim]
+                w = tf.get_variable('w', [h_dim, self.att_nodes], initializer=self.weight_initializer)
+                h_att = tf.matmul(flatten_h, w)
+                # h_att: [batch_size, att_nodes]
+            with tf.variable_scope('encoder_states', reuse=reuse):
+                # flatten_encoder_states: [batch_size, input_steps, encoder_state_dim]
+                w = tf.get_variable('w', [encoder_state_dim, self.att_nodes], initializer=self.weight_initializer)
+                encoder_state_att = tf.matmul(tf.reshape(flatten_encoder_states, [-1, encoder_state_dim]), w)
+                # encoder_state_att: [batch_size*input_steps, att_nodes]
+                encoder_state_att = tf.reshape(encoder_state_att, [-1, encoder_state_shape[1], self.att_nodes])
+                # encoder_state_att: [batch_size, input_steps, att_nodes]
+            b = tf.get_variable('b', [self.att_nodes], initializer=self.const_initializer)
+            att_h_plus = tf.nn.relu(encoder_state_att + tf.expand_dims(h_att, 1) + b)
+            w_att = tf.get_variable('w_att', [self.att_nodes, 1], initializer=self.weight_initializer)
+            out_att = tf.reshape(tf.matmul(tf.reshape(att_h_plus, [-1, self.att_nodes]), w_att), [-1, encoder_state_shape[1]])
+            # out_att: [batch_size, input_steps]
+            alpha = tf.nn.softmax(out_att)
+            context = tf.reduce_sum(flatten_encoder_states * tf.expand_dims(alpha, -1), 1, name='context')
+            att_context = tf.reshape(context, [-1, encoder_state_shape[2], encoder_state_shape[3], encoder_state_shape[4]])
+            # att_context: [batch_size, 16, 16, 64]
+            return att_context, alpha
+
+
+    def decoder(self, init_state, encoder_h_state, reuse=True):
         layer = self.decoder_layer
         param = self.decoder_layer_param
         #y = None
         state = init_state
         h_state = state[0].h
-        # attention layer
-        y, _ = self.attention_layer(h_state, reuse=reuse)
+        # global attention layer
+        glb_ctx_y, _ = self.global_attention_layer(h_state, reuse=reuse)
+        # temporal attention layer
+        tpr_ctx_y, _ = self.temporal_attention_layer(h_state, encoder_h_state, reuse=reuse)
+        y = tf.concat([glb_ctx_y, tpr_ctx_y], axis=-1)
         with tf.variable_scope('decoder', reuse=reuse):
             conv_lstm_index = 0
             for i in range(len(layer)):
@@ -181,14 +224,18 @@ class AttConvLSTM(object):
         #self.init_state_encoder_conv_lstm = self.encoder_conv_lstm[0].zero_state(batch_size)
         # encoder
         state = self.encoder_state
+        encoder_h_state = []
         for t in range(self.input_steps):
             #_, state = self.encoder(x[:, t, :, :, :], state, reuse=(t!=0))
             _, state = self.encoder(x[:, t, :, :, :], state, reuse=tf.AUTO_REUSE)
+            encoder_h_state.append(state[-1].h)
+        encoder_h_state = tf.stack(encoder_h_state)
+        encoder_h_state = tf.transpose(encoder_h_state, [1,0,2,3,4])
         state_2 = state
         y_ = []
         for t in range(self.output_steps):
             #out, state_2 = self.decoder(state_2, reuse=(t!=0))
-            out, state_2 = self.decoder(state_2, reuse=tf.AUTO_REUSE)
+            out, state_2 = self.decoder(state_2, encoder_h_state, reuse=tf.AUTO_REUSE)
             y_.append(out)
         y_ = tf.stack(y_)
         y_ = tf.transpose(y_, [1,0,2,3,4])
@@ -205,4 +252,3 @@ class AttConvLSTM(object):
             return y_, loss, weighted_loss, step_weight
         else:
             return y_, loss
-

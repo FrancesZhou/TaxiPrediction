@@ -47,18 +47,16 @@ class ModelSolver(object):
         # build graphs
         if self.weighted_loss:
             y_, loss, w_loss, s_weight = self.model.build_model()
+            grad_loss = w_loss
         else:
             y_, loss = self.model.build_model()
+            grad_loss = loss
 
         #tf.get_variable_scope().reuse_variables()
 
         # train op
         with tf.variable_scope('optimizer', reuse=tf.AUTO_REUSE):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
-            if self.weighted_loss:
-                grad_loss = w_loss
-            else:
-                grad_loss = loss
             grads = tf.gradients(grad_loss, tf.trainable_variables())
             grads_and_vars = list(zip(grads, tf.trainable_variables()))
             train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)

@@ -209,7 +209,7 @@ def main():
                 learning_rate=FLAGS.lr, save_every=FLAGS.save_every, 
                 pretrained_model=FLAGS.pretrained_model, model_path='citybike-results/model_save/ConvLSTM/',
                 test_model='citybike-results/model_save/ConvLSTM/model-'+str(FLAGS.n_epochs), log_path='citybike-results/log/ConvLSTM/')
-        elif FLAGS.model=='AttConvLSTM':
+        elif 'AttConvLSTM' in FLAGS.model:
             # train_data: [num, row, col, channel]
             if FLAGS.use_ae:
                 # auto-encoder to cluster train_data
@@ -250,8 +250,8 @@ def main():
             else:
                 # k-means to cluster train_data
                 print('k-means to cluster...')
-                model_path = 'citybike-results/model_save/AttConvLSTM/'
-                log_path = 'citybike-results/log/AttConvLSTM/'
+                model_path = 'citybike-results/model_save/' + FLAGS.model + '/'
+                log_path = 'citybike-results/log/' + FLAGS.model + '/'
                 if not os.path.exists(model_path):
                     os.makedirs(model_path)
                 if not os.path.exists(log_path):
@@ -268,8 +268,8 @@ def main():
                     cluster_centroid = np.reshape(cluster_centroid, (-1, train_data.shape[1], train_data.shape[2], train_data.shape[3]))
                     np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             # build model
-            print('build AttConvLSTM model...')
-            model = AttConvLSTM(input_dim=input_dim, 
+            print 'build ' + FLAGS.model + ' model...'
+            model = FLAGS.model(input_dim=input_dim,
                 att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes, 
                 batch_size=FLAGS.batch_size, 
                 layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
