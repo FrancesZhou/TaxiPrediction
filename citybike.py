@@ -269,7 +269,11 @@ def main():
                     np.save(model_path + 'cluster_centroid.npy', cluster_centroid)
             # build model
             print 'build ' + FLAGS.model + ' model...'
-            model = FLAGS.model(input_dim=input_dim,
+            if FLAGS.model == 'AttConvLSTM':
+                model_name = AttConvLSTM
+            else:
+                model_name = MultiAttConvLSTM
+            model = model_name(input_dim=input_dim,
                 att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes, 
                 batch_size=FLAGS.batch_size, 
                 layer={'encoder': ['conv', 'conv', 'conv_lstm', 'conv_lstm'], 
