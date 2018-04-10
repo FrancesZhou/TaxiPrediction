@@ -288,7 +288,7 @@ def main():
                 'attention': [ [[3,3], [1,1,1,1], 8],
                 [[3,3], [1,1,1,1], 16] ]},
                 input_steps=10, output_steps=10)
-            elif FLAGS.model == 'MultiConvLSTM':
+            elif FLAGS.model == 'MultiAttConvLSTM':
                 model = MultiAttConvLSTM(input_dim=input_dim,
                 att_inputs=cluster_centroid, att_nodes=FLAGS.att_nodes,
                 batch_size=FLAGS.batch_size,
