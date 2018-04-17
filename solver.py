@@ -3,6 +3,7 @@ import numpy as np
 import time
 import os
 from sklearn.model_selection import train_test_split
+from progressbar import *
 import tensorflow as tf
 import sys
 sys.path.append('./util/')
@@ -64,21 +65,21 @@ class ModelSolver(object):
         #tf.get_variable_scope().reuse_variables()
         gpu_options = tf.GPUOptions(allow_growth=True)
         # summary op
-        tf.summary.scalar('batch_loss', loss)
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.op.name, var)
-        for grad, var in grads_and_vars:
-            if grad is not None:
-                tf.summary.histogram(var.op.name+'/gradient', grad)
-            else:
-                tf.summary.histogram(var.op.name+'/gradient', tf.zeros([1], tf.int32))
-
-        summary_op = tf.summary.merge_all()
+        # tf.summary.scalar('batch_loss', loss)
+        # for var in tf.trainable_variables():
+        #     tf.summary.histogram(var.op.name, var)
+        # for grad, var in grads_and_vars:
+        #     if grad is not None:
+        #         tf.summary.histogram(var.op.name+'/gradient', grad)
+        #     else:
+        #         tf.summary.histogram(var.op.name+'/gradient', tf.zeros([1], tf.int32))
+        #
+        # summary_op = tf.summary.merge_all()
         tf.get_variable_scope().reuse_variables()
 
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             tf.global_variables_initializer().run()
-            summary_writer = tf.summary.FileWriter(self.log_path, graph=sess.graph)
+            #summary_writer = tf.summary.FileWriter(self.log_path, graph=sess.graph)
             saver = tf.train.Saver(tf.global_variables())
             if self.pretrained_model is not None:
                 print "Start training with pretrained model..."
@@ -92,7 +93,10 @@ class ModelSolver(object):
                 # cross validation
                 if self.cross_val:
                     x, x_val, y, y_val = train_test_split(raw_x, raw_y, test_size=0.1, random_state=50)
+                widgets = ['Train: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
                 for i in range(len(x)):
+                    pbar.update(i)
                     if self.cpt_ext:
                         feed_dict = {self.model.x_c: np.array(x[i][0]), self.model.x_p: np.array(x[i][1]), self.model.x_t: np.array(x[i][2]),
                                     self.model.x_ext: np.array(x[i][3]),
@@ -102,10 +106,11 @@ class ModelSolver(object):
                     _, l = sess.run([train_op, loss], feed_dict)
                     curr_loss += l
                     # write summary for tensorboard visualization
-                    if i%500 == 0:
-                        print("at epoch "+str(e)+', '+str(i))
-                        summary = sess.run(summary_op, feed_dict)
-                        summary_writer.add_summary(summary, e*len(x) + i)
+                    # if i%500 == 0:
+                    #     print("at epoch "+str(e)+', '+str(i))
+                    #     summary = sess.run(summary_op, feed_dict)
+                    #     summary_writer.add_summary(summary, e*len(x) + i)
+                pbar.finish()
                 # compute counts of all regions
                 t_count = 0
                 for c in range(len(y)):
@@ -114,7 +119,10 @@ class ModelSolver(object):
                 print("at epoch " + str(e) + ", train loss is " + str(curr_loss) + ' , ' + str(t_rmse) + ' , ' + str(self.preprocessing.real_loss(t_rmse)))
                 # ================================= validate =================================
                 val_loss = 0
+                widgets = ['Validation: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
                 for i in range(len(y_val)):
+                    pbar.update(i)
                     if self.cpt_ext:
                         feed_dict = {self.model.x_c: np.array(x_val[i][0]), self.model.x_p: np.array(x_val[i][1]), self.model.x_t: np.array(x_val[i][2]),
                                     self.model.x_ext: np.array(x_val[i][3]),
@@ -123,9 +131,9 @@ class ModelSolver(object):
                         feed_dict = {self.model.x: x_val[i], self.model.y: y_val[i]}
                     _, l = sess.run([y_, loss], feed_dict=feed_dict)
                     val_loss += l
-
+                pbar.finish()
                 # y_val : [batches, batch_size, seq_length, row, col, channel]
-                print(np.array(y_val).shape)
+                #print(np.array(y_val).shape)
                 v_count = 0
                 for v in range(len(y_val)):
                     v_count += np.prod(np.array(y_val[v]).shape)
@@ -142,7 +150,10 @@ class ModelSolver(object):
             y_test = test_data['y']
             t_loss = 0
             y_pre_test = []
+            widgets = ['Test: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+            pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
             for i in range(len(y_test)):
+                pbar.update(i)
                 if self.cpt_ext:
                     feed_dict = {self.model.x_c: np.array(x_test[i][0]), self.model.x_p: np.array(x_test[i][1]), self.model.x_t: np.array(x_test[i][2]),
                                 self.model.x_ext: np.array(x_test[i][3]),
@@ -152,13 +163,13 @@ class ModelSolver(object):
                 y_pre_i, l = sess.run([y_, loss], feed_dict=feed_dict)
                 t_loss += l
                 y_pre_test.append(y_pre_i)
-
+            pbar.finish()
             # y_val : [batches, batch_size, seq_length, row, col, channel]
-            print(np.array(y_test).shape)
+            #print(np.array(y_test).shape)
             t_count = 0
             for t in range(len(y_test)):
                 t_count += np.prod(np.array(y_test[t]).shape)
-            print('t_count = '+str(t_count))
+            #print('t_count = '+str(t_count))
             rmse = np.sqrt(t_loss/t_count)
             print("at epoch " + str(e) + ", test loss is " + str(t_loss) + ' , ' + str(rmse) + ' , ' + str(self.preprocessing.real_loss(rmse)))
             # ----- weighted_loss -----
@@ -187,10 +198,13 @@ class ModelSolver(object):
                 t_loss = 0
                 i = pre_index
                 y_pre_test_n = np.zeros([len(seq)-n-pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3], self.model.input_conf[0][1]])
+                widgets = ['Test for next n steps: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
                 while i<len(seq)-n:
+                    pbar.update(i)
                     # seq_i : pre_index+n
-                    if i%500 == 0:
-                        print("test_1_to_n at i = "+str(i))
+                    # if i%500 == 0:
+                    #     print("test_1_to_n at i = "+str(i))
                     seq_i = np.copy(seq[i-pre_index: i+n])
                     time_i = timestamps[i-pre_index: i+n]
                     for n_i in range(n):
@@ -217,6 +231,7 @@ class ModelSolver(object):
                         t_loss += l
                     y_pre_test_n[i-pre_index] = seq_i[pre_index:]
                     i += 1
+                pbar.finish()
                 row, col, flow = np.array(seq).shape[1:]
                 print(row,col,flow)
                 test_count = (len(seq)-pre_index-n)*n*(row*col*flow)
