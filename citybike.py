@@ -4,21 +4,14 @@ import os
 import sys
 from sklearn.cluster import KMeans
 from solver import ModelSolver
-# for mac debug
-sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/model/')
-sys.path.append('/Users/frances/Documents/DeepLearning/Code/TaxiPrediction/util/')
-# for server running
-sys.path.append('/home/zx/TaxiPrediction/model/')
-sys.path.append('./util/')
-sys.path.append('./data/')
-from ConvLSTM import *
-from autoencoder import *
-from AttConvLSTM import *
-from MultiAttConvLSTM import *
-from ResNet import *
-from AttResNet import *
-from preprocessing import *
-from utils import *
+from model.ConvLSTM import ConvLSTM
+from model.autoencoder import AutoEncoder
+from model.AttConvLSTM import AttConvLSTM
+from model.MultiAttConvLSTM import MultiAttConvLSTM
+from model.ResNet import ResNet
+from model.AttResNet import AttResNet
+from util.preprocessing import *
+from util.utils import *
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('gpu', '0', """which gpu to use: 0 or 1""")
@@ -48,7 +41,7 @@ tf.app.flags.DEFINE_integer('trend', 4,
 tf.app.flags.DEFINE_integer('cluster_num', 128,
                             """num of cluster in attention mechanism""")
 tf.app.flags.DEFINE_integer('kmeans_run_num', 5,
-                            """times for running kmeans to cluster""")
+                            """number of times for running kmeans to cluster""")
 tf.app.flags.DEFINE_integer('att_nodes', 1024,
                             """num of nodes in attention layer""")
 tf.app.flags.DEFINE_integer('pre_saved_cluster', 0,
@@ -156,24 +149,27 @@ def main():
                 pretrained_model=FLAGS.pretrained_model, model_path=model_path,
                 test_model='citybike-results/model_save/ResNet/model-'+str(FLAGS.n_epochs), log_path=log_path,
                 cross_val=False, cpt_ext=True)
-        print('begin training...')
-        test_n = {'data': test_data, 'timestamps': test_timestamps}
-        _, test_prediction = solver.train(test, test_n, output_steps=FLAGS.output_steps)
-        # get test_target and test_prediction
-        i = pre_index
-        test_target = []
-        while i<len(test_data)-FLAGS.output_steps:
-            test_target.append(test_data[i:i+FLAGS.output_steps])
-            i+=1
-        test_target = np.asarray(test_target)
-        #np.save('results/ResNet/test_target.npy', test_target)
-        #np.save('results/ResNet/test_prediction.npy', test_prediction)
-        #print('begin testing for predicting next 1 step')
-        #solver.test(test)
-        # test 1 to n
-        #print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
-        #test_n = {'data': test_data, 'timestamps': test_timestamps}
-        #solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
+        if FLAGS.train:
+            print('begin training...')
+            test_n = {'data': test_data, 'timestamps': test_timestamps}
+            _, test_prediction = solver.train(test, test_n, output_steps=FLAGS.output_steps)
+            # get test_target and test_prediction
+            i = pre_index
+            test_target = []
+            while i<len(test_data)-FLAGS.output_steps:
+                test_target.append(test_data[i:i+FLAGS.output_steps])
+                i+=1
+            test_target = np.asarray(test_target)
+            # np.save('results/ResNet/test_target.npy', test_target)
+            # np.save('results/ResNet/test_prediction.npy', test_prediction)
+        if FLAGS.test:
+            print('begin testing for predicting next 1 step')
+            solver.test(test)
+            # test 1 to n
+            print('begin testing for predicting next '+str(FLAGS.output_steps)+' steps')
+            test_n = {'data': test_data, 'timestamps': test_timestamps}
+            solver.test_1_to_n(test_n)
+            #solver.test_1_to_n(test_n, n=FLAGS.output_steps, close=FLAGS.closeness, period=FLAGS.period, trend=FLAGS.trend)
     else:
         train_data = pre_process.transform(train_data)
         train_x, train_y = batch_data(data=train_data, batch_size=FLAGS.batch_size,
@@ -323,8 +319,8 @@ def main():
             solver.test_model = solver.model_path + FLAGS.pretrained_model
             test_prediction = solver.test(test)
             test_target = np.asarray(test_y)
-    # np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
-    # np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
+    np.save('citybike-results/results/'+FLAGS.model+'/test_target.npy', test_target)
+    np.save('citybike-results/results/'+FLAGS.model+'/test_prediction.npy', test_prediction)
 
 if __name__ == "__main__":
     main()

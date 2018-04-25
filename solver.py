@@ -5,9 +5,7 @@ import os
 from sklearn.model_selection import train_test_split
 from progressbar import *
 import tensorflow as tf
-import sys
-sys.path.append('./util/')
-from utils import *
+from util.utils import *
 
 class ModelSolver(object):
     def __init__(self, model, data, val_data, preprocessing, **kwargs):
