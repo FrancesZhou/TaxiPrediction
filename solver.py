@@ -197,9 +197,10 @@ class ModelSolver(object):
                 i = pre_index
                 y_pre_test_n = np.zeros([len(seq)-n-pre_index, n, self.model.input_conf[0][2], self.model.input_conf[0][3], self.model.input_conf[0][1]])
                 widgets = ['Test for next n steps: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
-                pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
+                #pbar = ProgressBar(widgets=widgets, maxval=len(x)).start()
+                pbar = ProgressBar(widgets=widgets, maxval=len(seq)-n-pre_index).start()
                 while i<len(seq)-n:
-                    pbar.update(i)
+                    pbar.update(i-pre_index)
                     # seq_i : pre_index+n
                     # if i%500 == 0:
                     #     print("test_1_to_n at i = "+str(i))
