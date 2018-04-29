@@ -10,6 +10,7 @@ def load_data(filename, split):
         d1 = sio.loadmat(filename[0])['p_map']
         d2 = sio.loadmat(filename[1])['d_map']
         data = np.concatenate((d1[:,:,:,np.newaxis], d2[:,:,:,np.newaxis]), axis=3)
+        data = np.array(data, dtype=np.float32)
     train = data[0:split[0],:,:,:]
     validate = data[split[0]:split[0]+split[1],:,:,:]
     test = data[split[0]+split[1]:split[0]+split[1]+split[2],:,:,:]
@@ -20,6 +21,7 @@ def load_npy_data(filename, split):
         d1 = np.load(filename[0])
         d2 = np.load(filename[1])
         data = np.concatenate((d1[:,:,:,np.newaxis], d2[:,:,:,np.newaxis]), axis=3)
+        data = np.array(data, dtype=np.float32)
     train = data[0:split[0],:,:,:]
     validate = data[split[0]:split[0]+split[1],:,:,:]
     test = data[split[0]+split[1]:split[0]+split[1]+split[2],:,:,:]

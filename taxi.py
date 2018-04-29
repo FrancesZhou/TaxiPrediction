@@ -87,6 +87,7 @@ def main():
         train_data = data[:split[0]]
         val_data = data[split[0] - pre_index:split[0] + split[1]]
         test_data = data[split[0] + split[1] - pre_index:split[0] + split[1] + split[2]]
+        del data
         # get train, validate, test timestamps
         train_timestamps = all_timestamps[:split[0]]
         val_timestamps = all_timestamps[split[0] - pre_index:split[0] + split[1]]
