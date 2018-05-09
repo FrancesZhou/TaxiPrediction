@@ -115,8 +115,6 @@ def main():
     input_dim = [train_data.shape[1], train_data.shape[2], train_data.shape[3]]
     if 'AttConvLSTM' in FLAGS.model:
         # train_data: [num, row, col, channel]
-        # k-means to cluster train_data
-        print('k-means to cluster...')
         model_path = 'citybike-results/model_save/' + FLAGS.model + '/'
         log_path = 'citybike-results/log/' + FLAGS.model + '/'
         if not os.path.exists(model_path):
@@ -131,10 +129,12 @@ def main():
             cluster_centroid_2 = None
             cluster_centroid = None
             if FLAGS.kmeans_cluster:
+                print('k-means to cluster...')
                 kmeans = KMeans(n_clusters=FLAGS.cluster_num, init='random', n_init=FLAGS.kmeans_run_num,
                                 tol=0.00000001).fit(vector_data)
                 cluster_centroid_1 = kmeans.cluster_centers_
             if FLAGS.average_cluster:
+                print('average cluster...')
                 if FLAGS.average_cluster == 24:
                     cluster_centroid_2 = average_cluster_24(vector_data)
                 elif FLAGS.average_cluster == 48:
